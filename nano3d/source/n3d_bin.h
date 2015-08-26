@@ -28,7 +28,7 @@ struct n3d_command_t {
     };
 };
 
-typedef n3d_pipe_t<n3d_command_t, 1204 * 8> n3d_command_pipe_t;
+typedef n3d_pipe_t<n3d_command_t, 1024> n3d_command_pipe_t;
 
 struct n3d_bin_t {
 
@@ -41,8 +41,8 @@ struct n3d_bin_t {
     {
     }
 
-    //
-    n3d_atomic_t lock_;
+    // 
+    n3d_spinlock_t lock_;
 
     // command pipe
     n3d_command_pipe_t pipe_;

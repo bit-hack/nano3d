@@ -60,7 +60,7 @@ void n3d_bin_process (
             break;
 
         default:
-            assert (!"unknown command");
+            n3d_assert(!"unknown command");
         }
     }
 }

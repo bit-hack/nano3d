@@ -25,7 +25,7 @@ n3d_atomic_t n3d_thread_t::detail_t::next_id_ = 0;
 n3d_thread_t::n3d_thread_t()
     : detail_( new n3d_thread_t::detail_t ) 
 {
-    assert(detail_);
+    n3d_assert(detail_);
 }
 
 n3d_thread_t::~n3d_thread_t() {
@@ -36,23 +36,25 @@ n3d_thread_t::~n3d_thread_t() {
 
 void n3d_thread_t::start() {
     detail_t & d_ = *checked(detail_);
-    assert(!d_.thread_);
+    n3d_assert(!d_.thread_);
     d_.active_ = 1;
     d_.thread_ = new std::thread(trampoline, this);
-    assert(d_.thread_);
+    n3d_assert(d_.thread_);
 }
 
 void n3d_thread_t::stop() {
     detail_t & d_ = *checked(detail_);
-    d_.active_ = 0;
-    if (d_.thread_->joinable())
-        d_.thread_->join();
-    delete d_.thread_;
-    d_.thread_ = nullptr;
+    if (d_.thread_) {
+        d_.active_ = 0;
+        if (d_.thread_->joinable())
+            d_.thread_->join();
+        delete d_.thread_;
+        d_.thread_ = nullptr;
+    }
 }
 
 void n3d_thread_t::trampoline(n3d_thread_t * self) {
-    assert(self);
+    n3d_assert(self);
     self->thread_func();
 }
 
@@ -63,6 +65,11 @@ void n3d_thread_t::thread_func() {
     }
 }
 
+bool n3d_thread_t::is_active() const {
+    detail_t & d_ = *checked(detail_);
+    return d_.active_ != 0;
+}
+
 void n3d_yield() {
-    //(todo) yield to another thread
+    std::this_thread::yield();
 }

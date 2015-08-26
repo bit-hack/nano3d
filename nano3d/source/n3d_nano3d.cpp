@@ -37,11 +37,11 @@ struct nano3d_t::detail_t {
 nano3d_t::nano3d_t()
     : detail_(new nano3d_t::detail_t)
 {
-    assert(detail_);
+    n3d_assert(detail_);
 }
 
 nano3d_t::~nano3d_t() {
-    assert(detail_);
+    n3d_assert(detail_);
     delete detail_;
 }
 
@@ -54,7 +54,7 @@ n3d_result_e nano3d_t::start(n3d_framebuffer_t *f, uint32_t num_threads) {
         return n3d_fail;
 
     // add the bins to the bin manager
-    for (int i=0; i<d_.frame_.num_bins_; ++i) {
+    for (uint32_t i=0; i<d_.frame_.num_bins_; ++i) {
         d_.bin_man_.add(d_.frame_.bin_ + i, nullptr);
     }
 
@@ -108,7 +108,7 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
 
     n3d_vertex_t v[4];
 
-    assert((num_indices % 3) == 0);
+    n3d_assert((num_indices % 3) == 0);
     for (uint32_t i = 0; i < num_indices; i += 3) {
 
         const uint32_t i0 = indices[i + 0];
@@ -158,7 +158,7 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
         };
 
         // feed triangles to bins
-        assert(num==3 || num==4);
+        n3d_assert(num == 3 || num == 4);
         for (uint32_t j = 2; j < num; ++j) {
 
             n3d_rasterizer_t::triangle_t tri;
@@ -204,12 +204,12 @@ n3d_rasterizer_t * nano3d_t::rasterizer_new(n3d_rasterizer_e type) {
         return new n3d_rasterizer_t(rast);
 
     default:
-        assert(!"invalid n3d_rasterizer_e");
+        n3d_assert(!"invalid n3d_rasterizer_e");
     }
     return nullptr;
 }
 
 void nano3d_t::rasterizer_delete(n3d_rasterizer_t * rast) {
-    assert(rast);
+    n3d_assert(rast);
     delete rast;
 }

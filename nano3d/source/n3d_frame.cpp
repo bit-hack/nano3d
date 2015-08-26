@@ -15,15 +15,15 @@ bool n3d_frame_create(
     int bx = fb_width / bin_w;
     int by = fb_height / bin_h;
     int nbins = bx * by;
-    assert(nbins > 0);
+    n3d_assert(nbins > 0);
 
     frame->num_bins_ = nbins;
 
     frame->bin_ = new n3d_bin_t[nbins];
-    assert(frame->bin_);
+    n3d_assert(frame->bin_);
 
     float * depth = new float[fb_width * fb_height];
-    assert(depth);
+    n3d_assert(depth);
     frame->depth_ = depth;
 
     for (int i=0; i<nbins; ++i) {
