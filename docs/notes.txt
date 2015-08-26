@@ -1,0 +1,26 @@
+
+Progressive bin optimization:
+
+    After the flip of each frame, the worker threads should all report their overall
+    rendering time.  At this point, a bin can be taken from the longest running thread
+    and given to the fastest running thread.  This should settle out over a number
+    of frames.  Some form of hysteresis will perhaps be needed.
+
+Minimal transform:
+
+    Cache the result of previous vertex transforms so that we only transform each vertex
+    once, even when it is referenced by multiple indices.
+
+Maximal distance:
+
+    It would be possible to store the maximal depth per bin for a potential fast cull.
+    This is likely inferior to the span buffer optimization.
+
+Work stealing:
+
+    Would it be possible to allow worker threads to steal work from other bins if their
+    queue is empty?  Since everything within a bin is highly synchronous is this even
+    possible to implement?
+    Perhaps each bin could have multiple planes which receive fragments and then later
+    these planes are merged/blended into the destination buffer.  This would allow
+    many threads/triangles to be processed independently from one another.
