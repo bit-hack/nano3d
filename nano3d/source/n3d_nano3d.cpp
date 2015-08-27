@@ -9,12 +9,11 @@
 #include "n3d_frame.h"
 
 struct nano3d_t::detail_t {
-    
+
     detail_t()
         : vertex_buffer_()
-        , rasterizer_   ()
-        , texture_      (nullptr)
         , framebuffer_  ()
+        , frame_num_    (0)
     {
         n3d_identity(matrix_[n3d_model_view]);
         n3d_identity(matrix_[n3d_projection]);
@@ -22,16 +21,13 @@ struct nano3d_t::detail_t {
 
     n3d_vertex_buffer_t   vertex_buffer_;
 
-#if 1 // these should only be stored by the bins
-    n3d_rasterizer_t      rasterizer_;
-    n3d_texture_t       * texture_;
-#endif
-
     n3d_framebuffer_t     framebuffer_;
     mat4f_t               matrix_[2];
 
     n3d_frame_t           frame_;
     n3d_bin_man_t         bin_man_;
+
+    uint32_t              frame_num_;
 };
 
 nano3d_t::nano3d_t()
@@ -77,9 +73,6 @@ n3d_result_e nano3d_t::bind(n3d_vertex_buffer_t *in) {
 n3d_result_e nano3d_t::bind(n3d_rasterizer_t *in) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
-    //(todo) remove local reference to rasterizer
-    d_.rasterizer_ = *in;
-
     n3d_frame_send_rasterizer(&d_.frame_, in);
     return n3d_sucess;
 }
@@ -87,9 +80,6 @@ n3d_result_e nano3d_t::bind(n3d_rasterizer_t *in) {
 n3d_result_e nano3d_t::bind(n3d_texture_t *in) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
-    //(todo) remove local reference to texture
-    d_.texture_ = in;
-
     n3d_frame_send_texture(&d_.frame_, in);
     return n3d_sucess;
 }
@@ -104,7 +94,7 @@ n3d_result_e nano3d_t::bind(mat4f_t *in, n3d_matrix_e slot) {
 n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
-    n3d_vertex_buffer_t & vb = detail_->vertex_buffer_;
+    n3d_vertex_buffer_t & vb = d_.vertex_buffer_;
 
     n3d_vertex_t v[4];
 
@@ -161,16 +151,14 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
         n3d_assert(num == 3 || num == 4);
         for (uint32_t j = 2; j < num; ++j) {
 
+            //(todo) allocate this from a global triangle list?
+            //       some kind of ring allocator
             n3d_rasterizer_t::triangle_t tri;
             if (!n3d_prepare(tri, v[j], v[j-1], v[j-2]))
                 continue;
 
             // send this triangle off for upload to the bins
             n3d_frame_send_triangle (&d_.frame_, tri);
-
-            //(todo) remove when the bins are working
-            if (d_.rasterizer_.run_)
-                d_.rasterizer_.run_(state, tri, d_.rasterizer_.user_);
         }
     }
 
@@ -179,14 +167,17 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
 
 n3d_result_e nano3d_t::present() {
 
-    n3d_frame_t & frame = detail_->frame_;
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_frame_t & frame = d_.frame_;
 
     // send the present command
     n3d_frame_present(&frame);
 
     //(todo) while single threaded just rasterize all the bins
     for (uint32_t i = 0; i < frame.num_bins_; ++i)
-        n3d_bin_process(frame.bin_+i);
+        n3d_bin_process(frame.bin_+i, d_.frame_num_);
+
+    ++d_.frame_num_;
 
     return n3d_sucess;
 }

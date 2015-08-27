@@ -93,7 +93,7 @@ void n3d_frame_send_triangle(
 
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_triangle;
-    cmd.triangle_ = &triangle;
+    cmd.triangle_ = triangle;
     send_all(frame, cmd);
 }
 

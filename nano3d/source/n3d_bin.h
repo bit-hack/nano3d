@@ -18,7 +18,7 @@ struct n3d_command_t {
 
     union
     {
-        n3d_rasterizer_t::triangle_t * triangle_;
+        n3d_rasterizer_t::triangle_t triangle_;
         n3d_rasterizer_t * rasterizer_;
         n3d_texture_t * texture_;
         struct {
@@ -71,4 +71,5 @@ struct n3d_bin_t {
 };
 
 void n3d_bin_process (
-    n3d_bin_t * bin);
+    n3d_bin_t * bin,
+    uint32_t target_frame);

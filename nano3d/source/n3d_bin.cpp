@@ -26,7 +26,8 @@ namespace {
 };
 
 void n3d_bin_process (
-    n3d_bin_t * bin) {
+    n3d_bin_t * bin,
+    uint32_t target_frame) {
 
     n3d_assert(bin);
 
@@ -40,17 +41,22 @@ void n3d_bin_process (
     state.depth_  = bin->depth_;
     state.pitch_  = bin->pitch_;
     state.texure_ = bin->texture_;
+    state.offset_ = bin->offset_;
 
-    while (bin->pipe_.pop(cmd) || active) {
+    while (active && (bin->frame_ <= target_frame)) {
+
+        // try to pop a command from the queue
+        while (! bin->pipe_.pop(cmd)) {
+            n3d_yield ();
+        }
 
         switch (cmd.command_) {
         case (n3d_command_t::cmd_triangle):
 
             if (bin->rasterizer_) {
-                //(todo) shift triangle interpolants to bin origin
-                //       perhaps the rasterizer should do this?
+                n3d_assert (bin->rasterizer_->run_);
                 bin->rasterizer_->run_(state,
-                                       *cmd.triangle_,
+                                       cmd.triangle_,
                                        bin->rasterizer_->user_);
             }
             break;
