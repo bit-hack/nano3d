@@ -27,7 +27,7 @@ bool test1() {
 
     thread.start();
 
-    while (!(thread.val_ & 0xff000000)) {
+    while (!(thread.val_ & 0xffff0000)) {
         n3d_yield();
     }
 

@@ -12,12 +12,12 @@ struct n3d_list_t {
     }
 
     void insert(type_t t) {
-        assert(head_ < size_);
+        n3d_assert(head_ < size_);
         item_[head_++] = t;
     }
 
     void remove(uint32_t ix) {
-        assert(ix < head_);
+        n3d_assert(ix < head_);
         item_[ix] = item_[--head_];
     }
 
@@ -26,7 +26,7 @@ struct n3d_list_t {
     }
 
     type_t & get(uint32_t ix) {
-        assert(ix < head_);
+        n3d_assert(ix < head_);
         return item_[ix];
     }
 

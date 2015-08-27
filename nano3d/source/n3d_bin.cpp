@@ -3,14 +3,14 @@
 
 namespace {
 
-    void bin_clear(n3d_bin_t & bin, uint32_t argb, float depth) {
+    void bin_clear(n3d_bin_t &bin, uint32_t argb, float depth) {
 
         const uint32_t height = bin.height_;
-        const uint32_t width  = bin.width_;
-        const uint32_t pitch  = bin.pitch_;
+        const uint32_t width = bin.width_;
+        const uint32_t pitch = bin.pitch_;
 
-        uint32_t * c = bin.color_;
-        float    * z = bin.depth_;
+        uint32_t *c = bin.color_;
+        float *z = bin.depth_;
 
         for (uint32_t y = 0; y < height; ++y) {
 
@@ -23,24 +23,36 @@ namespace {
             c += pitch;
         }
     }
-
-    void bin_triangle(n3d_bin_t & bin, n3d_rasterizer_t::triangle_t & t) {
-        //(todo) shift interpolants to bin offset
-    }
-
 };
 
 void n3d_bin_process (
     n3d_bin_t * bin) {
 
+    n3d_assert(bin);
+
     bool active = true;
     n3d_command_t cmd;
+
+    n3d_rasterizer_t::state_t state;
+    state.color_  = bin->color_;
+    state.width_  = bin->width_;
+    state.height_ = bin->height_;
+    state.depth_  = bin->depth_;
+    state.pitch_  = bin->pitch_;
+    state.texure_ = bin->texture_;
 
     while (bin->pipe_.pop(cmd) || active) {
 
         switch (cmd.command_) {
         case (n3d_command_t::cmd_triangle):
-            bin_triangle (*bin, *cmd.triangle_);
+
+            if (bin->rasterizer_) {
+                //(todo) shift triangle interpolants to bin origin
+                //       perhaps the rasterizer should do this?
+                bin->rasterizer_->run_(state,
+                                       *cmd.triangle_,
+                                       bin->rasterizer_->user_);
+            }
             break;
 
         case (n3d_command_t::cmd_present):
@@ -53,6 +65,7 @@ void n3d_bin_process (
 
         case (n3d_command_t::cmd_texture):
             bin->texture_ = cmd.texture_;
+            state.texure_ = cmd.texture_;
             break;
 
         case (n3d_command_t::cmd_rasterizer):

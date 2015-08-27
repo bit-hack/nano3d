@@ -36,7 +36,7 @@ namespace {
 
             for (uint64_t i = 0; is_active(); ++i) {
 
-                if ((i & 0xfff) == (rng & 0xfff)) {
+                if ((i & 0xffff) == (rng & 0xffff)) {
                     std::this_thread::sleep_for(std::chrono::microseconds(rng & 0xff));
                     rand64(rng);
                 }
@@ -64,7 +64,7 @@ bool test2() {
 
     for (uint64_t i = 0; i < 1000000; ) {
 
-        if ((i & 0xfff) == (rng & 0xfff)) {
+        if ((i & 0xffff) == (rng & 0xffff)) {
             std::this_thread::sleep_for(std::chrono::microseconds(rng & 0xff));
             rand64(rng);
         }

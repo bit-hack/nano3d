@@ -25,7 +25,10 @@ void n3d_bin_man_t::add(n3d_bin_t *bin, n3d_thread_t *thread) {
 n3d_bin_t * n3d_bin_man_t::get_work(n3d_thread_t *thread) {
 
     pair_t & p = pair_[0];
-    long index = n3d_atomic_inc(p.index_);
+    if (p.bin_.size() == 0)
+        return nullptr;
 
-    return nullptr;
+    long index = n3d_atomic_inc(p.index_) % p.bin_.size();
+
+    return p.bin_[index];
 }

@@ -6,7 +6,8 @@
 #include "n3d_thread.h"
 
 // a pipe suitable for only ONE producer and ONE consumer
-// there must not be concurrent access to any one end of this pipe
+// there must not be concurrent access to either end of this pipe
+// it will allow one thread to send messages to another thread only.
 template <typename type_t, uint32_t size_ = 1204>
 struct n3d_pipe_t {
 
