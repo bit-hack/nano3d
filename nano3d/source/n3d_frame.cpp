@@ -62,8 +62,6 @@ bool n3d_frame_create(
         bin.texture_ = nullptr;
 
         bin.frame_ = 0;
-        //(todo) hook this up to that in n3d_detail
-        bin.bins_pending_ = nullptr;
     }
 
     return true;

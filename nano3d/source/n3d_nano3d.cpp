@@ -13,7 +13,6 @@ struct nano3d_t::detail_t {
     detail_t()
         : vertex_buffer_()
         , framebuffer_  ()
-        , frame_num_    (0)
     {
         n3d_identity(matrix_[n3d_model_view]);
         n3d_identity(matrix_[n3d_projection]);
@@ -27,7 +26,6 @@ struct nano3d_t::detail_t {
     n3d_frame_t           frame_;
     n3d_bin_man_t         bin_man_;
 
-    uint32_t              frame_num_;
     n3d_atomic_t          work_pending_;
 };
 
@@ -47,7 +45,7 @@ n3d_result_e nano3d_t::start(n3d_framebuffer_t *f, uint32_t num_threads) {
     nano3d_t::detail_t  & d_ = *checked(detail_);
     d_.framebuffer_ = *f;
 
-    if (! n3d_frame_create(&d_.frame_, f))
+    if (!n3d_frame_create(&d_.frame_, f))
         return n3d_fail;
 
     // add the bins to the bin manager
@@ -174,20 +172,17 @@ n3d_result_e nano3d_t::present() {
     // send the present command
     n3d_frame_present(&frame);
 
-    // we can ask the bin manager for work to do
+    // ask the bin manager for work to do
     n3d_bin_t * bin = nullptr;
-    while (bin = d_.bin_man_.get_work(nullptr)) {
-        n3d_bin_process(bin, d_.frame_num_);
+    while (!d_.bin_man_.frame_is_done()) {
+
+        if (bin = d_.bin_man_.get_work(nullptr))
+            n3d_bin_process(bin);
+        else
+            n3d_yield();
     }
 
-    //(todo) we need to wait until all bins have presented here
-#if 0
-    while (d_.work_pending_ > 0)
-        n3d_yield();
-    d_.work_pending_ += d_.frame_.num_bins_;
-#endif
-
-    ++d_.frame_num_;
+    d_.bin_man_.next_frame();
 
     return n3d_sucess;
 }

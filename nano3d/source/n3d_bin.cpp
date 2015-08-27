@@ -26,8 +26,14 @@ namespace {
 };
 
 void n3d_bin_process (
-    n3d_bin_t * bin,
-    uint32_t target_frame) {
+    n3d_bin_t * bin) {
+
+    n3d_assert(bin->lock_.atom_ != 0);
+
+    // bin_man will aquire the lock when its asked to receive work
+    // to do.  this lock scope will release the lock after we have
+    // finished processing the bin.
+    n3d_scope_spinlock_t(bin->lock_, false);
 
     n3d_assert(bin);
 
@@ -43,11 +49,11 @@ void n3d_bin_process (
     state.texure_ = bin->texture_;
     state.offset_ = bin->offset_;
 
-    while (active && (bin->frame_ <= target_frame)) {
+    while (true) {
 
         // try to pop a command from the queue
         while (! bin->pipe_.pop(cmd)) {
-            n3d_yield ();
+            return;
         }
 
         switch (cmd.command_) {
@@ -62,11 +68,10 @@ void n3d_bin_process (
             break;
 
         case (n3d_command_t::cmd_present):
+            if (bin->counter_)
+                n3d_atomic_dec(*bin->counter_);
             ++bin->frame_;
-            active = false;
-            if (bin->bins_pending_)
-                n3d_atomic_dec(*bin->bins_pending_);
-            break;
+            return;
 
         case (n3d_command_t::cmd_clear) :
             bin_clear (*bin, cmd.clear_.color_, cmd.clear_.depth_);

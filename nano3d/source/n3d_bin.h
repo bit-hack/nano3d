@@ -38,7 +38,7 @@ struct n3d_bin_t {
         , texture_(nullptr)
         , color_(nullptr)
         , depth_(nullptr)
-        , bins_pending_(nullptr)
+        , counter_(nullptr)
     {
     }
 
@@ -56,7 +56,7 @@ struct n3d_bin_t {
     vec2f_t   offset_;
 
     //(todo) move to this instead?
-//    n3d_rasterizer_t::state_t state_;
+    n3d_rasterizer_t::state_t state_;
 
     // render targets
     uint32_t *color_;
@@ -70,10 +70,9 @@ struct n3d_bin_t {
     // the current frame number
     uint32_t frame_;
 
-    //
-    n3d_atomic_t * bins_pending_;
+    // 
+    n3d_atomic_t * counter_;
 };
 
 void n3d_bin_process (
-    n3d_bin_t * bin,
-    uint32_t target_frame);
+    n3d_bin_t * bin);
