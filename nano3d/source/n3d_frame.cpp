@@ -62,6 +62,8 @@ bool n3d_frame_create(
         bin.texture_ = nullptr;
 
         bin.frame_ = 0;
+        //(todo) hook this up to that in n3d_detail
+        bin.bins_pending_ = nullptr;
     }
 
     return true;
@@ -118,12 +120,14 @@ void n3d_frame_send_rasterizer(
 }
 
 void n3d_frame_clear(
-    n3d_frame_t * frame) {
+    n3d_frame_t * frame,
+    uint32_t argb,
+    float z) {
 
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_clear;
-    cmd.clear_.color_ = 0x101010;
-    cmd.clear_.depth_ = -1000;
+    cmd.clear_.color_ = argb;
+    cmd.clear_.depth_ = z;
     send_all(frame, cmd);
 }
 

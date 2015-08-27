@@ -28,6 +28,7 @@ struct nano3d_t::detail_t {
     n3d_bin_man_t         bin_man_;
 
     uint32_t              frame_num_;
+    n3d_atomic_t          work_pending_;
 };
 
 nano3d_t::nano3d_t()
@@ -173,9 +174,18 @@ n3d_result_e nano3d_t::present() {
     // send the present command
     n3d_frame_present(&frame);
 
-    //(todo) while single threaded just rasterize all the bins
-    for (uint32_t i = 0; i < frame.num_bins_; ++i)
-        n3d_bin_process(frame.bin_+i, d_.frame_num_);
+    // we can ask the bin manager for work to do
+    n3d_bin_t * bin = nullptr;
+    while (bin = d_.bin_man_.get_work(nullptr)) {
+        n3d_bin_process(bin, d_.frame_num_);
+    }
+
+    //(todo) we need to wait until all bins have presented here
+#if 0
+    while (d_.work_pending_ > 0)
+        n3d_yield();
+    d_.work_pending_ += d_.frame_.num_bins_;
+#endif
 
     ++d_.frame_num_;
 
@@ -203,4 +213,11 @@ n3d_rasterizer_t * nano3d_t::rasterizer_new(n3d_rasterizer_e type) {
 void nano3d_t::rasterizer_delete(n3d_rasterizer_t * rast) {
     n3d_assert(rast);
     delete rast;
+}
+
+n3d_result_e nano3d_t::clear(uint32_t argb, float z) {
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_frame_t & frame = d_.frame_;
+    n3d_frame_clear(&frame, argb, z);
+    return n3d_result_e::n3d_sucess;
 }

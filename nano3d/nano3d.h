@@ -106,6 +106,8 @@ struct nano3d_t {
     n3d_result_e start(n3d_framebuffer_t *, uint32_t num_threads);
     n3d_result_e stop();
 
+    n3d_result_e clear(uint32_t argb, float z);
+
     n3d_result_e bind(n3d_vertex_buffer_t *);
     n3d_result_e bind(n3d_rasterizer_t *);
     n3d_result_e bind(n3d_texture_t *);

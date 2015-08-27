@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "n3d_bin_man.h"
 #include "n3d_atomic.h"
 
@@ -22,13 +23,18 @@ void n3d_bin_man_t::add(n3d_bin_t *bin, n3d_thread_t *thread) {
     }
 }
 
-n3d_bin_t * n3d_bin_man_t::get_work(n3d_thread_t *thread) {
+n3d_bin_t * n3d_bin_man_t::get_work(n3d_thread_t *thread, uint32_t frame) {
 
-    pair_t & p = pair_[0];
-    if (p.bin_.size() == 0)
-        return nullptr;
+    while (true) {
 
-    long index = n3d_atomic_inc(p.index_) % p.bin_.size();
+        pair_t &p = pair_[0];
+        if (p.bin_.size() == 0)
+            return nullptr;
+
+        long index = n3d_atomic_inc(p.index_) % p.bin_.size();
+
+        n3d_bin_t & bin =
+    }
 
     return p.bin_[index];
 }

@@ -38,6 +38,7 @@ struct n3d_bin_t {
         , texture_(nullptr)
         , color_(nullptr)
         , depth_(nullptr)
+        , bins_pending_(nullptr)
     {
     }
 
@@ -68,6 +69,9 @@ struct n3d_bin_t {
 
     // the current frame number
     uint32_t frame_;
+
+    //
+    n3d_atomic_t * bins_pending_;
 };
 
 void n3d_bin_process (

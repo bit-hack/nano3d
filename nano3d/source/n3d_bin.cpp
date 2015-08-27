@@ -64,6 +64,8 @@ void n3d_bin_process (
         case (n3d_command_t::cmd_present):
             ++bin->frame_;
             active = false;
+            if (bin->bins_pending_)
+                n3d_atomic_dec(*bin->bins_pending_);
             break;
 
         case (n3d_command_t::cmd_clear) :

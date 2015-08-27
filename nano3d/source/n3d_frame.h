@@ -35,7 +35,9 @@ void n3d_frame_send_rasterizer(
     n3d_rasterizer_t * rasterizer);
 
 void n3d_frame_clear(
-    n3d_frame_t * frame);
+    n3d_frame_t * frame,
+    uint32_t argb,
+    float z);
 
 void n3d_frame_present(
     n3d_frame_t * frame);
