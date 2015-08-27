@@ -18,7 +18,7 @@ struct n3d_command_t {
 
     union
     {
-        n3d_rasterizer_t::triangle_t * triangle_;
+        n3d_rasterizer_t::triangle_t triangle_;
         n3d_rasterizer_t * rasterizer_;
         n3d_texture_t * texture_;
         struct {
@@ -28,7 +28,7 @@ struct n3d_command_t {
     };
 };
 
-typedef n3d_pipe_t<n3d_command_t, 1204 * 8> n3d_command_pipe_t;
+typedef n3d_pipe_t<n3d_command_t, 1024> n3d_command_pipe_t;
 
 struct n3d_bin_t {
 
@@ -38,11 +38,12 @@ struct n3d_bin_t {
         , texture_(nullptr)
         , color_(nullptr)
         , depth_(nullptr)
+        , counter_(nullptr)
     {
     }
 
-    //
-    n3d_atomic_t lock_;
+    // locked when a thread is processing a bin
+    n3d_spinlock_t lock_;
 
     // command pipe
     n3d_command_pipe_t pipe_;
@@ -54,6 +55,9 @@ struct n3d_bin_t {
     // bin offset from [0,0]
     vec2f_t   offset_;
 
+    //(todo) move to this instead?
+    n3d_rasterizer_t::state_t state_;
+
     // render targets
     uint32_t *color_;
     float    *depth_;
@@ -62,6 +66,12 @@ struct n3d_bin_t {
     // bin size
     uint32_t  width_;
     uint32_t  height_;
+
+    // the current frame number
+    uint32_t frame_;
+
+    // 
+    n3d_atomic_t * counter_;
 };
 
 void n3d_bin_process (

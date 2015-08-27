@@ -3,17 +3,14 @@
 #include "n3d_triangle.h"
 #include "n3d_pipeline.h"
 #include "n3d_math.h"
-#include "n3d_rasterizer.h"
 #include "n3d_bin.h"
 #include "n3d_bin_man.h"
 #include "n3d_frame.h"
 
 struct nano3d_t::detail_t {
-    
+
     detail_t()
         : vertex_buffer_()
-        , rasterizer_   ()
-        , texture_      (nullptr)
         , framebuffer_  ()
     {
         n3d_identity(matrix_[n3d_model_view]);
@@ -22,26 +19,23 @@ struct nano3d_t::detail_t {
 
     n3d_vertex_buffer_t   vertex_buffer_;
 
-#if 1 // these should only be stored by the bins
-    n3d_rasterizer_t      rasterizer_;
-    n3d_texture_t       * texture_;
-#endif
-
     n3d_framebuffer_t     framebuffer_;
     mat4f_t               matrix_[2];
 
     n3d_frame_t           frame_;
     n3d_bin_man_t         bin_man_;
+
+    n3d_atomic_t          work_pending_;
 };
 
 nano3d_t::nano3d_t()
     : detail_(new nano3d_t::detail_t)
 {
-    assert(detail_);
+    n3d_assert(detail_);
 }
 
 nano3d_t::~nano3d_t() {
-    assert(detail_);
+    n3d_assert(detail_);
     delete detail_;
 }
 
@@ -50,11 +44,11 @@ n3d_result_e nano3d_t::start(n3d_framebuffer_t *f, uint32_t num_threads) {
     nano3d_t::detail_t  & d_ = *checked(detail_);
     d_.framebuffer_ = *f;
 
-    if (! n3d_frame_create(&d_.frame_, f))
+    if (!n3d_frame_create(&d_.frame_, f))
         return n3d_fail;
 
     // add the bins to the bin manager
-    for (int i=0; i<d_.frame_.num_bins_; ++i) {
+    for (uint32_t i=0; i<d_.frame_.num_bins_; ++i) {
         d_.bin_man_.add(d_.frame_.bin_ + i, nullptr);
     }
 
@@ -77,9 +71,6 @@ n3d_result_e nano3d_t::bind(n3d_vertex_buffer_t *in) {
 n3d_result_e nano3d_t::bind(n3d_rasterizer_t *in) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
-    //(todo) remove local reference to rasterizer
-    d_.rasterizer_ = *in;
-
     n3d_frame_send_rasterizer(&d_.frame_, in);
     return n3d_sucess;
 }
@@ -87,9 +78,6 @@ n3d_result_e nano3d_t::bind(n3d_rasterizer_t *in) {
 n3d_result_e nano3d_t::bind(n3d_texture_t *in) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
-    //(todo) remove local reference to texture
-    d_.texture_ = in;
-
     n3d_frame_send_texture(&d_.frame_, in);
     return n3d_sucess;
 }
@@ -104,11 +92,11 @@ n3d_result_e nano3d_t::bind(mat4f_t *in, n3d_matrix_e slot) {
 n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
-    n3d_vertex_buffer_t & vb = detail_->vertex_buffer_;
+    n3d_vertex_buffer_t & vb = d_.vertex_buffer_;
 
     n3d_vertex_t v[4];
 
-    assert((num_indices % 3) == 0);
+    n3d_assert((num_indices % 3) == 0);
     for (uint32_t i = 0; i < num_indices; i += 3) {
 
         const uint32_t i0 = indices[i + 0];
@@ -158,19 +146,17 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
         };
 
         // feed triangles to bins
-        assert(num==3 || num==4);
+        n3d_assert(num == 3 || num == 4);
         for (uint32_t j = 2; j < num; ++j) {
 
+            //(todo) allocate this from a global triangle list?
+            //       some kind of ring allocator
             n3d_rasterizer_t::triangle_t tri;
             if (!n3d_prepare(tri, v[j], v[j-1], v[j-2]))
                 continue;
 
             // send this triangle off for upload to the bins
             n3d_frame_send_triangle (&d_.frame_, tri);
-
-            //(todo) remove when the bins are working
-            if (d_.rasterizer_.run_)
-                d_.rasterizer_.run_(state, tri, d_.rasterizer_.user_);
         }
     }
 
@@ -179,18 +165,28 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
 
 n3d_result_e nano3d_t::present() {
 
-    n3d_frame_t & frame = detail_->frame_;
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_frame_t & frame = d_.frame_;
 
     // send the present command
     n3d_frame_present(&frame);
 
-    //(todo) while single threaded just rasterize all the bins
-    for (uint32_t i = 0; i < frame.num_bins_; ++i)
-        n3d_bin_process(frame.bin_+i);
+    // ask the bin manager for work to do
+    n3d_bin_t * bin = nullptr;
+    while (!d_.bin_man_.frame_is_done()) {
+
+        if (bin = d_.bin_man_.get_work(nullptr))
+            n3d_bin_process(bin);
+        else
+            n3d_yield();
+    }
+
+    d_.bin_man_.next_frame();
 
     return n3d_sucess;
 }
 
+#if 0
 n3d_rasterizer_t * nano3d_t::rasterizer_new(n3d_rasterizer_e type) {
 
     n3d_rasterizer_t rast = {
@@ -204,12 +200,20 @@ n3d_rasterizer_t * nano3d_t::rasterizer_new(n3d_rasterizer_e type) {
         return new n3d_rasterizer_t(rast);
 
     default:
-        assert(!"invalid n3d_rasterizer_e");
+        n3d_assert(!"invalid n3d_rasterizer_e");
     }
     return nullptr;
 }
 
 void nano3d_t::rasterizer_delete(n3d_rasterizer_t * rast) {
-    assert(rast);
+    n3d_assert(rast);
     delete rast;
+}
+#endif
+
+n3d_result_e nano3d_t::clear(uint32_t argb, float z) {
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_frame_t & frame = d_.frame_;
+    n3d_frame_clear(&frame, argb, z);
+    return n3d_result_e::n3d_sucess;
 }

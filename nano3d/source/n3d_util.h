@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #if defined(_MSC_VER)
   #include <intrin.h>
 #endif
@@ -8,20 +10,20 @@
 #include <xmmintrin.h>
 
 #if defined(_MSC_VER)
-  #define assert( X ) { if (!(X)) __debugbreak(); }
+  #define n3d_assert( X ) { if (!(X)) __debugbreak(); }
 #else
   #if 1
     #include <signal.h>
     #include <unistd.h>
-    #define assert( X ) { if (!(X)) raise(SIGTRAP); }
+#define n3d_assert( X ) { if (!(X)) raise(SIGTRAP); }
   #else
-    #define assert( X ) { if (!(X)) __asm__("int3 \n"); }
+#define n3d_assert( X ) { if (!(X)) __asm__("int3 \n"); }
   #endif
 #endif
 
 template <typename type_t>
 static type_t * checked(type_t * x) {
-    assert(x);
+    n3d_assert(x);
     return x;
 }
 

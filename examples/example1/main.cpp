@@ -1,6 +1,7 @@
 #define _SDL_main_h
 #include <SDL.h>
 #include <nano3d.h>
+#include <nano3d_ex.h>
 #include <source/n3d_math.h>
 
 namespace {
@@ -67,7 +68,7 @@ struct app_t {
         n3d_.bind(&vb);
 
         // bind a rasterizer
-        rast_ = n3d_.rasterizer_new(n3d_raster_reference);
+        rast_ = n3d_rasterizer_new(n3d_raster_reference);
         n3d_.bind(rast_);
 
         // bind a projection matrix
@@ -81,7 +82,7 @@ struct app_t {
     bool stop() {
 
         n3d_.stop();
-        n3d_.rasterizer_delete(rast_);
+        n3d_rasterizer_delete(rast_);
         return n3d_.stop() == n3d_sucess;
     }
 

@@ -3,14 +3,14 @@
 
 namespace {
 
-    void bin_clear(n3d_bin_t & bin, uint32_t argb, float depth) {
+    void bin_clear(n3d_bin_t &bin, uint32_t argb, float depth) {
 
         const uint32_t height = bin.height_;
-        const uint32_t width  = bin.width_;
-        const uint32_t pitch  = bin.pitch_;
+        const uint32_t width = bin.width_;
+        const uint32_t pitch = bin.pitch_;
 
-        uint32_t * c = bin.color_;
-        float    * z = bin.depth_;
+        uint32_t *c = bin.color_;
+        float *z = bin.depth_;
 
         for (uint32_t y = 0; y < height; ++y) {
 
@@ -23,29 +23,55 @@ namespace {
             c += pitch;
         }
     }
-
-    void bin_triangle(n3d_bin_t & bin, n3d_rasterizer_t::triangle_t & t) {
-        //(todo) shift interpolants to bin offset
-    }
-
 };
 
 void n3d_bin_process (
     n3d_bin_t * bin) {
 
+    n3d_assert(bin->lock_.atom_ != 0);
+
+    // bin_man will aquire the lock when its asked to receive work
+    // to do.  this lock scope will release the lock after we have
+    // finished processing the bin.
+    n3d_scope_spinlock_t(bin->lock_, false);
+
+    n3d_assert(bin);
+
     bool active = true;
     n3d_command_t cmd;
 
-    while (bin->pipe_.pop(cmd) || active) {
+    n3d_rasterizer_t::state_t state;
+    state.color_  = bin->color_;
+    state.width_  = bin->width_;
+    state.height_ = bin->height_;
+    state.depth_  = bin->depth_;
+    state.pitch_  = bin->pitch_;
+    state.texure_ = bin->texture_;
+    state.offset_ = bin->offset_;
+
+    while (true) {
+
+        // try to pop a command from the queue
+        while (! bin->pipe_.pop(cmd)) {
+            return;
+        }
 
         switch (cmd.command_) {
         case (n3d_command_t::cmd_triangle):
-            bin_triangle (*bin, *cmd.triangle_);
+
+            if (bin->rasterizer_) {
+                n3d_assert (bin->rasterizer_->run_);
+                bin->rasterizer_->run_(state,
+                                       cmd.triangle_,
+                                       bin->rasterizer_->user_);
+            }
             break;
 
         case (n3d_command_t::cmd_present):
-            active = false;
-            break;
+            if (bin->counter_)
+                n3d_atomic_dec(*bin->counter_);
+            ++bin->frame_;
+            return;
 
         case (n3d_command_t::cmd_clear) :
             bin_clear (*bin, cmd.clear_.color_, cmd.clear_.depth_);
@@ -53,6 +79,7 @@ void n3d_bin_process (
 
         case (n3d_command_t::cmd_texture):
             bin->texture_ = cmd.texture_;
+            state.texure_ = cmd.texture_;
             break;
 
         case (n3d_command_t::cmd_rasterizer):
@@ -60,7 +87,7 @@ void n3d_bin_process (
             break;
 
         default:
-            assert (!"unknown command");
+            n3d_assert(!"unknown command");
         }
     }
 }
