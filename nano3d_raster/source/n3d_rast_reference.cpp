@@ -1,6 +1,6 @@
 #include "nano3d.h"
-#include "n3d_rasterizer.h"
-#include "n3d_math.h"
+#include "n3d_rast_reference.h"
+#include "source/n3d_math.h"
 
 namespace {
 
@@ -40,16 +40,10 @@ void n3d_raster_reference_run(
     vec3f_t bc_vy = { t.b0_.v_, t.b1_.v_, t.b2_.v_ };
     vec3f_t bc_sx = { t.b0_.sx_, t.b1_.sx_, t.b2_.sx_ };
     vec3f_t bc_sy = { t.b0_.sy_, t.b1_.sy_, t.b2_.sy_ };
-    // shift to offset
-    bc_vy += bc_sx * s.offset_.x;
-    bc_vy += bc_sy * s.offset_.y;
 
     vec3f_t cl_vy = { t.r_.v_, t.g_.v_, t.b_.v_ };
     vec3f_t cl_sx = { t.r_.sx_, t.g_.sx_, t.b_.sx_ };
     vec3f_t cl_sy = { t.r_.sy_, t.g_.sy_, t.b_.sy_ };
-    // shift to offset
-    cl_vy += bc_sx * s.offset_.x;
-    cl_vy += bc_sy * s.offset_.y;
 
     float w_vy = t.w_.v_;
     float w_sx = t.w_.sx_;

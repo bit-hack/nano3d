@@ -56,6 +56,7 @@ void n3d_bin_process (
             break;
 
         case (n3d_command_t::cmd_present):
+            ++bin->frame_;
             active = false;
             break;
 

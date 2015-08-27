@@ -35,12 +35,21 @@ namespace {
 
     uint32_t ix[] = {
 
-        0, 1, 2, /**/ 2, 1, 3,
-        0, 1, 2, /**/ 2, 1, 3,
-        0, 1, 2, /**/ 2, 1, 3,
-        0, 1, 2, /**/ 2, 1, 3,
-        0, 1, 2, /**/ 2, 1, 3,
-        0, 1, 2, /**/ 2, 1, 3,
+#define face(v0,v1,v2,v3) v0, v1, v2, v1, v3, v2
+
+/*
+            5     4
+         1      0
+
+            7     6
+         3      2
+**/
+        face(0, 1, 2, 3),
+        face(4, 0, 6, 2),
+        face(4, 5, 6, 7),
+        face(5, 1, 7, 3),
+        face(4, 5, 0, 1),
+        face(2, 3, 6, 7),
     };
 
     float delta = 0.f;
@@ -82,6 +91,13 @@ struct app_t {
         rast_ = n3d_.rasterizer_new(n3d_raster_reference);
         n3d_.bind(rast_);
 
+        // bind model view matrix
+        mat4f_t mvm;
+        n3d_identity(mvm);
+        mvm.e[11] = -3.f;
+        mvm.e[14] = -3.f;
+        n3d_.bind(&mvm, n3d_model_view);
+
         // bind a projection matrix
         mat4f_t proj;
         n3d_frustum(proj, -1.f, 1.f, -1.f, 1.f, 1.f, 100.f);
@@ -112,26 +128,10 @@ struct app_t {
 
         while (tick()) {
 
-#if 1
-            float st = sinf(delta);
-            float ct = cosf(delta);
-
-            p[0].x = st;
-            p[0].z = ct - 2.f;
-            p[1].x = st;
-            p[1].z = ct - 2.f;
-            p[2].x =-st;
-            p[2].z =-ct - 2.f;
-            p[3].x =-st;
-            p[3].z =-ct - 2.f;
-#endif
-
             SDL_FillRect(screen_, nullptr, 0x101010);
 
-            // draw 6 elements from an index buffer
-            n3d_.draw(6, ix);
+            n3d_.draw(36, ix);
 
-            // copy nano3d state to frame buffer
             n3d_.present();
 
             SDL_Flip(screen_);

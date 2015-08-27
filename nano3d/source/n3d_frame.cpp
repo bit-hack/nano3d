@@ -1,6 +1,18 @@
 #include "n3d_frame.h"
 #include "n3d_bin.h"
 
+namespace {
+
+void send_all(n3d_frame_t * frame, n3d_command_t & cmd) {
+    for (uint32_t i=0; i<frame->num_bins_; ++i) {
+        n3d_bin_t & bin = frame->bin_[i];
+        while (! bin.pipe_.push(cmd))
+            n3d_yield();
+    }
+}
+
+} // namespace {}
+
 bool n3d_frame_create(
     n3d_frame_t * frame,
     n3d_framebuffer_t * framebuffer) {
@@ -48,6 +60,8 @@ bool n3d_frame_create(
 
         bin.rasterizer_ = nullptr;
         bin.texture_ = nullptr;
+
+        bin.frame_ = 0;
     }
 
     return true;
@@ -77,32 +91,46 @@ void n3d_frame_send_triangle(
     //       sure that there is some way to consume those commands in case
     //       that the queue is full, as we would block forever.
 
-    //(todo) pack as command and push to all bins
+    n3d_command_t cmd;
+    cmd.command_ = cmd.cmd_triangle;
+    cmd.triangle_ = &triangle;
+    send_all(frame, cmd);
 }
 
 void n3d_frame_send_texture(
     n3d_frame_t * frame,
     n3d_texture_t * texture) {
 
-    //(todo) pack as command and push to all bins
+    n3d_command_t cmd;
+    cmd.command_ = cmd.cmd_texture;
+    cmd.texture_ = texture;
+    send_all(frame, cmd);
 }
 
 void n3d_frame_send_rasterizer(
     n3d_frame_t * frame,
     n3d_rasterizer_t * rasterizer) {
 
-    //(todo) pack as command and push to all bins
+    n3d_command_t cmd;
+    cmd.command_ = cmd.cmd_rasterizer;
+    cmd.rasterizer_ = rasterizer;
+    send_all(frame, cmd);
 }
 
 void n3d_frame_clear(
     n3d_frame_t * frame) {
 
-    //(todo) pack as command and push to all bins
+    n3d_command_t cmd;
+    cmd.command_ = cmd.cmd_clear;
+    cmd.clear_.color_ = 0x101010;
+    cmd.clear_.depth_ = -1000;
+    send_all(frame, cmd);
 }
 
 void n3d_frame_present(
     n3d_frame_t * frame) {
 
-    //(todo) pack as command and push to all bins
-    //(todo) add the current thread as a worker
+    n3d_command_t cmd;
+    cmd.command_ = cmd.cmd_present;
+    send_all(frame, cmd);
 }

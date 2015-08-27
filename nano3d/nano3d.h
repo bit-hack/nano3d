@@ -63,11 +63,13 @@ struct n3d_rasterizer_t {
         uint32_t      * color_;
         float         * depth_;
         n3d_texture_t * texure_;
-        //
+        // render target size
         uint32_t width_;
         uint32_t height_;
-        //
+        // scanline width
         uint32_t pitch_;
+        // offset from screen origin [0,0]
+        vec2f_t offset_;
     };
 
     void *user_;
