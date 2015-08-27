@@ -186,31 +186,6 @@ n3d_result_e nano3d_t::present() {
     return n3d_sucess;
 }
 
-#if 0
-n3d_rasterizer_t * nano3d_t::rasterizer_new(n3d_rasterizer_e type) {
-
-    n3d_rasterizer_t rast = {
-        nullptr,
-        nullptr
-    };
-
-    switch (type) {
-    case (n3d_raster_reference) :
-        rast.run_ = n3d_raster_reference_run;
-        return new n3d_rasterizer_t(rast);
-
-    default:
-        n3d_assert(!"invalid n3d_rasterizer_e");
-    }
-    return nullptr;
-}
-
-void nano3d_t::rasterizer_delete(n3d_rasterizer_t * rast) {
-    n3d_assert(rast);
-    delete rast;
-}
-#endif
-
 n3d_result_e nano3d_t::clear(uint32_t argb, float z) {
     nano3d_t::detail_t & d_ = *checked(detail_);
     n3d_frame_t & frame = d_.frame_;
