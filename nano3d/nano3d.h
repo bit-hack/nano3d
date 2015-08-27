@@ -89,10 +89,12 @@ enum n3d_matrix_e {
     n3d_model_view,
 };
 
+#if 0
 enum n3d_rasterizer_e {
 
     n3d_raster_reference,
 };
+#endif
 
 struct nano3d_t {
 
@@ -100,8 +102,10 @@ struct nano3d_t {
     ~nano3d_t();
     nano3d_t(const nano3d_t &) = delete;
 
+#if 0
     n3d_rasterizer_t * rasterizer_new(n3d_rasterizer_e);
     void rasterizer_delete(n3d_rasterizer_t *);
+#endif
 
     n3d_result_e start(n3d_framebuffer_t *, uint32_t num_threads);
     n3d_result_e stop();

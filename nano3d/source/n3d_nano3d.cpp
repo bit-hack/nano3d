@@ -3,7 +3,6 @@
 #include "n3d_triangle.h"
 #include "n3d_pipeline.h"
 #include "n3d_math.h"
-#include "n3d_rasterizer.h"
 #include "n3d_bin.h"
 #include "n3d_bin_man.h"
 #include "n3d_frame.h"
@@ -187,6 +186,7 @@ n3d_result_e nano3d_t::present() {
     return n3d_sucess;
 }
 
+#if 0
 n3d_rasterizer_t * nano3d_t::rasterizer_new(n3d_rasterizer_e type) {
 
     n3d_rasterizer_t rast = {
@@ -209,6 +209,7 @@ void nano3d_t::rasterizer_delete(n3d_rasterizer_t * rast) {
     n3d_assert(rast);
     delete rast;
 }
+#endif
 
 n3d_result_e nano3d_t::clear(uint32_t argb, float z) {
     nano3d_t::detail_t & d_ = *checked(detail_);
