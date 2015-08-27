@@ -1,7 +1,21 @@
-#if defined _MSC_VER
-#include <intrin.h>
-#endif
 #include "n3d_pipeline.h"
+
+namespace {
+
+bool point_in_clip_space(const vec4f_t & p) {
+
+    if (p.x < -p.w || p.x > p.w) return false;
+    if (p.y < -p.w || p.y > p.w) return false;
+    if (p.z <  0.f || p.z > p.w) return false;
+    return true;
+}
+
+template <typename T>
+T lerp(float k, const T & a, const T & b) {
+    return ((1.f - k) * a) + (k * b);
+}
+
+} // namespace {}
 
 void n3d_transform(n3d_vertex_t * v, const uint32_t num_verts, const mat4f_t & m) {
 
@@ -19,7 +33,21 @@ void n3d_transform(n3d_vertex_t * v, const uint32_t num_verts, const mat4f_t & m
     }
 }
 
+// this function only needs to clip triangles to the near plane however
+// we can also reject triangles that are fully outside the frustum too.
 void n3d_clip(n3d_vertex_t v[4], uint32_t & num_verts) {
+
+    uint32_t clip = 0;
+    for (int i = 0; i < 3; i++)
+        clip += point_in_clip_space(v[i].p_);
+    if (clip == 3) {
+        num_verts = 0;
+        return;
+    }
+
+    if (clip > 0)
+        num_verts = 0;
+
 }
 
 void n3d_w_divide(n3d_vertex_t v[4], const uint32_t num_verts) {

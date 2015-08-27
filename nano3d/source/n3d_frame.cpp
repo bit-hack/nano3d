@@ -85,7 +85,11 @@ void n3d_frame_send_triangle(
     n3d_frame_t * frame,
     n3d_rasterizer_t::triangle_t & triangle) {
 
+    n3d_assert(frame);
+
     //(todo) send to all bins that this triangle aabb overlaps
+
+    n3d_bin_t & bin = *frame->bin_;
 
     //(note) if we are pushing commands into a command queue we need to be
     //       sure that there is some way to consume those commands in case

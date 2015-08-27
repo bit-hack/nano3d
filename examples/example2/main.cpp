@@ -29,8 +29,6 @@ namespace {
         2, 1, 3,
     };
 
-    float delta = 0.f;
-
 } // namespace {}
 
 struct app_t {
@@ -38,6 +36,7 @@ struct app_t {
     SDL_Surface * screen_;
     nano3d_t n3d_;
     n3d_rasterizer_t * rast_;
+    float delta;
 
     bool init() {
 
@@ -73,6 +72,8 @@ struct app_t {
         n3d_frustum(proj, -1.f, 1.f, -1.f, 1.f, 1.f, 100.f);
         n3d_.bind(&proj, n3d_projection);
 
+        delta = 0.f;
+
         return true;
     }
 
@@ -94,37 +95,35 @@ struct app_t {
         return true;
     }
 
+    const float pi2 = n3d_pi * 2.f;
+    
     bool main() {
 
         while (tick()) {
 
 #if 1
-            float st = sinf(delta);
-            float ct = cosf(delta);
+            float st = sin(delta);
+            float ct =-cos(delta);
 
             p[0].x = st;
-            p[0].z = ct - 2.f;
+            p[0].z = ct - 3.f;
             p[1].x = st;
-            p[1].z = ct - 2.f;
+            p[1].z = ct - 3.f;
             p[2].x =-st;
-            p[2].z =-ct - 2.f;
+            p[2].z =-ct - 3.f;
             p[3].x =-st;
-            p[3].z =-ct - 2.f;
+            p[3].z =-ct - 3.f;
 #endif
-
-            SDL_FillRect(screen_, nullptr, 0x101010);
+            
+            n3d_.clear(0x101010, -100.f);
 
             // draw 6 elements from an index buffer
             n3d_.draw(6, ix);
 
-            // copy nano3d state to frame buffer
             n3d_.present();
-
             SDL_Flip(screen_);
 
-            delta += 0.003f;
-            if (delta >= (n3d_pi * 2.f))
-                delta -= (n3d_pi * 2.f);
+            delta = (delta >= pi2) ? delta-pi2 : delta+0.01f;
         }
 
         return true;

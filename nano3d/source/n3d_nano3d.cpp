@@ -121,8 +121,10 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
         // transform into homogeneous clip space
         n3d_transform(v, num, d_.matrix_[n3d_projection]);
 
-        // clip triangle to the near plane
+        // clip triangle to viewing frustum
         n3d_clip(v, num);
+        if (num == 0)
+            continue;
 
         // apply perspective division
         n3d_w_divide(v, num);
