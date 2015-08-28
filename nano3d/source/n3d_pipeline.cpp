@@ -1,4 +1,5 @@
 #include "n3d_pipeline.h"
+#include "n3d_util.h"
 
 namespace {
 
@@ -13,6 +14,50 @@ bool point_in_clip_space(const vec4f_t & p) {
 template <typename T>
 T lerp(float k, const T & a, const T & b) {
     return ((1.f - k) * a) + (k * b);
+}
+
+enum {
+    OUTSIDE = 0, // both points outside
+    INSIDE  ,    // both points inside
+    SPLIT1  ,    // split and dest outside
+    SPLIT2  ,    // split and dest inside
+};
+
+// v1, v2, t1, t2, vsplit, tsplit 
+uint32_t clip_near( const vec4f_t & v0, 
+                    const vec4f_t & v1, 
+                    const vec2f_t & t0, 
+                    const vec2f_t & t1, 
+                    const vec4f_t & c0, 
+                    const vec4f_t & c1, 
+                    vec4f_t & vsplit, 
+                    vec2f_t & tsplit,
+                    vec4f_t & csplit ) {
+
+    const float npv = 1.f;
+
+    bool as = (v0.w <= npv);
+    bool bs = (v1.w <= npv);
+    // fully out
+    if ( as & bs ) { 
+        return OUTSIDE;
+    }
+    // clipping
+    if ( as ^ bs ) {
+        // difference between vertices
+        float d = (v0.w - v1.w); 
+        n3d_assert( d != .0f );
+        // intersection ratio
+        float i = (v0.w - npv) / d;
+        // if clip occurs between vertices
+//        if ( i >= 0.f && i <= 1.f ) {
+            vsplit = lerp( i, v0, v1 );
+            tsplit = lerp( i, t0, t1 );
+            csplit = lerp( i, c0, c1 );
+            return SPLIT1 + (!bs);
+//        }
+    }
+    return INSIDE;
 }
 
 } // namespace {}
