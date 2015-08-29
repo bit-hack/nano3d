@@ -9,10 +9,10 @@ namespace {
 
     vec3f_t p[] = {
 
-        { 1.f, 1.f, -2.f },
-        { 1.f,-1.f, -2.f },
-        {-1.f, 1.f, -2.f },
-        {-1.f,-1.f, -2.f },
+        { 1.f, 1.f,-3.f },
+        { 1.f,-1.f,-3.f },
+        {-1.f, 1.f,-3.f },
+        {-1.f,-1.f,-3.f },
     };
 
     vec3f_t c[] = {
@@ -67,9 +67,14 @@ struct app_t {
         rast_ = n3d_rasterizer_new(n3d_raster_reference);
         n3d_.bind(rast_);
 
+        // bind a model view matrix
+//        mat4f_t mvm;
+//        n3d_identity(mvm);
+//        n3d_.bind(&mvm, n3d_model_view);
+
         // bind a projection matrix
         mat4f_t proj;
-        n3d_frustum(proj, -1.f, 1.f, -1.f, 1.f, 1.f, 100.f);
+        n3d_frustum(proj, -1.f, 1.f, -1.f, 1.f, 1.f, 10.f);
         n3d_.bind(&proj, n3d_projection);
 
         delta = 0.f;
@@ -105,14 +110,16 @@ struct app_t {
             float st = sin(delta);
             float ct =-cos(delta);
 
+            float d =-2.5f;
+
             p[0].x = st;
-            p[0].z = ct - 3.f;
+            p[0].z = d + ct;
             p[1].x = st;
-            p[1].z = ct - 3.f;
+            p[1].z = d + ct;
             p[2].x =-st;
-            p[2].z =-ct - 3.f;
+            p[2].z = d - ct;
             p[3].x =-st;
-            p[3].z =-ct - 3.f;
+            p[3].z = d - ct;
 #endif
             
             n3d_.clear(0x101010, -100.f);
@@ -123,7 +130,7 @@ struct app_t {
             n3d_.present();
             SDL_Flip(screen_);
 
-            delta = (delta >= pi2) ? delta-pi2 : delta+0.01f;
+            delta = (delta >= pi2*2) ? 0.f : delta+0.01f;
         }
 
         return true;

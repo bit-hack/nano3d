@@ -1,19 +1,37 @@
 #include "n3d_pipeline.h"
 #include "n3d_util.h"
+#include "n3d_math.h"
 
 namespace {
 
 bool point_in_clip_space(const vec4f_t & p) {
-
     if (p.x < -p.w || p.x > p.w) return false;
     if (p.y < -p.w || p.y > p.w) return false;
-    if (p.z <  0.f || p.z > p.w) return false;
+    if (p.z <  0.f || p.z > p.w)
+        return false;
     return true;
 }
 
-template <typename T>
-T lerp(float k, const T & a, const T & b) {
+float lerp(float k, const float & a, const float & b) {
     return ((1.f - k) * a) + (k * b);
+}
+
+vec2f_t lerp(float k, const vec2f_t & a, const vec2f_t & b) {
+    //(todo) SIMD lerp
+    return vec2<float>(
+        lerp(k, a.x, b.x),
+        lerp(k, a.y, b.y)
+    );
+}
+
+vec4f_t lerp(float k, const vec4f_t & a, const vec4f_t & b) {
+    //(todo) SIMD lerp
+    return vec4<float>(
+        lerp(k, a.x, b.x),
+        lerp(k, a.y, b.y),
+        lerp(k, a.z, b.z),
+        lerp(k, a.w, b.w)
+    );
 }
 
 enum {
@@ -39,9 +57,8 @@ uint32_t clip_near( const vec4f_t & v0,
     bool as = (v0.w <= npv);
     bool bs = (v1.w <= npv);
     // fully out
-    if ( as & bs ) { 
+    if ( as & bs )
         return OUTSIDE;
-    }
     // clipping
     if ( as ^ bs ) {
         // difference between vertices
@@ -49,13 +66,11 @@ uint32_t clip_near( const vec4f_t & v0,
         n3d_assert( d != .0f );
         // intersection ratio
         float i = (v0.w - npv) / d;
-        // if clip occurs between vertices
-//        if ( i >= 0.f && i <= 1.f ) {
-            vsplit = lerp( i, v0, v1 );
-            tsplit = lerp( i, t0, t1 );
-            csplit = lerp( i, c0, c1 );
-            return SPLIT1 + (!bs);
-//        }
+        // find intersection point
+        vsplit = lerp( i, v0, v1 );
+        tsplit = lerp( i, t0, t1 );
+        csplit = lerp( i, c0, c1 );
+        return SPLIT1 + (!bs);
     }
     return INSIDE;
 }
@@ -82,17 +97,21 @@ void n3d_transform(n3d_vertex_t * v, const uint32_t num_verts, const mat4f_t & m
 // we can also reject triangles that are fully outside the frustum too.
 void n3d_clip(n3d_vertex_t v[4], uint32_t & num_verts) {
 
-    uint32_t clip = 0;
-    for (int i = 0; i < 3; i++)
-        clip += point_in_clip_space(v[i].p_);
-    if (clip == 3) {
+    uint32_t inside = 0;
+
+    for (uint32_t i = 0; i < 3; i++)
+        inside += point_in_clip_space(v[i].p_);
+
+    // no points in clip space so lets get rid of the entire triangle
+    //(note) i think we need to make sure that it doesnt get rejected
+    //       if it straddles the clipping planes of the screen.
+    if (inside == 0) {
         num_verts = 0;
         return;
     }
 
-    if (clip > 0)
-        num_verts = 0;
-
+//    if (inside < 3)
+//        num_verts = 0;
 }
 
 void n3d_w_divide(n3d_vertex_t v[4], const uint32_t num_verts) {

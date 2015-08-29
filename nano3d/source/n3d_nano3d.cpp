@@ -97,6 +97,9 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
     n3d_vertex_t v[4];
 
     n3d_assert((num_indices % 3) == 0);
+    if (num_indices % 3)
+        return n3d_fail;
+
     for (uint32_t i = 0; i < num_indices; i += 3) {
 
         const uint32_t i0 = indices[i + 0];
@@ -123,7 +126,7 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
 
         // clip triangle to viewing frustum
         n3d_clip(v, num);
-        if (num == 0)
+        if (num < 3)
             continue;
 
         // apply perspective division
