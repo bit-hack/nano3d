@@ -4,7 +4,6 @@
 #include <nano3d_ex.h>
 #include <source/n3d_math.h>
 #include <math.h>
-#include "objload.h"
 
 namespace {
 
@@ -87,7 +86,7 @@ struct app_t {
 
         // bind a projection matrix
         mat4f_t proj;
-        n3d_frustum(proj, -1.f, 1.f, -1.f, 1.f, 1.f, 10.f);
+        n3d_frustum(proj, -1.f, 1.f, -1.f, 1.f, 1.f, 15.f);
         n3d_.bind(&proj, n3d_projection);
 
         return true;
@@ -122,17 +121,29 @@ struct app_t {
     bool main() {
 
         float rx = 0.f, ry = 0.f, rz = 0.f;
+        float jx = 0.f, jy = 0.f, jz = 0.f;
+
+        float px = 0.f, py = 0.f, pz = 0.f;
 
         while (tick()) {
 
-            SDL_FillRect(screen_, nullptr, 0x101010);
+            n3d_.clear(0x101010, 1.f / 100.f);
 
-            // bind model view matrix
+            // bind a model view matrix
             mat4f_t mvm;
             n3d_rotate(mvm, rx, ry, rz);
-            mvm.e[14] = -2.6f;
+            n3d_translate(mvm, vec3(sin(px), cos(py), sin(pz)-3.8f));
             n3d_.bind(&mvm, n3d_model_view);
 
+            // draw the cube
+            n3d_.draw(36, ix);
+            n3d_.present();
+
+            n3d_rotate(mvm, jx, jy, jz);
+            n3d_translate(mvm, vec3(0.f, 0.f, - 4.0f));
+            n3d_.bind(&mvm, n3d_model_view);
+
+            // draw the cube
             n3d_.draw(36, ix);
             n3d_.present();
 
@@ -141,6 +152,14 @@ struct app_t {
             inc(rx, 0.07357f);
             inc(ry, 0.01123f);
             inc(rz, 0.04021f);
+
+            inc(jx, 0.03357f);
+            inc(jy, 0.00523f);
+            inc(jz, 0.02121f);
+
+            inc(px, 0.00317f);
+            inc(py, 0.00423f);
+            inc(pz, 0.00721f);
         }
 
         return true;
