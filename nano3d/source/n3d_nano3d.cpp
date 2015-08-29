@@ -107,7 +107,7 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
         const uint32_t i2 = indices[i + 2];
 
         vec2f_t uv = vec2(0.f, 0.f);
-        vec3f_t rgb = vec3(1.f, 1.f, 1.f);
+        vec4f_t rgb = vec4(1.f, 1.f, 1.f, 1.f);
 
         v[0] = { vec4(vb.pos_[i0]), vb.uv_ ? vb.uv_[i0] : uv, vb.rgb_ ? vb.rgb_[i0] : rgb };
         v[1] = { vec4(vb.pos_[i1]), vb.uv_ ? vb.uv_[i1] : uv, vb.rgb_ ? vb.rgb_[i1] : rgb };
@@ -152,17 +152,14 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
 
         // feed triangles to bins
         n3d_assert(num == 3 || num == 4);
-        for (uint32_t j = 2; j < num; ++j) {
-
-            //(todo) allocate this from a global triangle list?
-            //       some kind of ring allocator
+        for (uint32_t i = 2; i < num; ++i) {
             n3d_rasterizer_t::triangle_t tri;
-            if (!n3d_prepare(tri, v[j], v[j-1], v[j-2]))
+            if (!n3d_prepare(tri, v[0], v[i], v[i-1]))
                 continue;
-
             // send this triangle off for upload to the bins
-            n3d_frame_send_triangle (&d_.frame_, tri);
+            n3d_frame_send_triangle(&d_.frame_, tri);
         }
+        
     }
 
     return n3d_sucess;

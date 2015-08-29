@@ -41,11 +41,5 @@ struct n3d_vertex_t {
 
     vec4f_t p_;
     vec2f_t t_;
-    vec3f_t c_;
-};
-
-namespace {
-
-    static const float n3d_pi = 3.14159265359f;
-
+    vec4f_t c_;
 };

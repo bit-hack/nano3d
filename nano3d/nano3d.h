@@ -7,7 +7,7 @@ struct n3d_vertex_buffer_t {
     uint32_t   num_;
     vec3f_t  * pos_;
     vec2f_t  * uv_;
-    vec3f_t  * rgb_;
+    vec4f_t  * rgb_;
 };
 
 struct n3d_texture_t {
@@ -51,6 +51,7 @@ struct n3d_rasterizer_t {
         interp_t r_;    // red/w
         interp_t g_;    // green/w
         interp_t b_;    // blue/w
+        interp_t a_;    // alpha/w
 
         // triangle bounds
         vec2f_t min_;

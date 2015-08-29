@@ -2,25 +2,27 @@
 
 #include "n3d_decl.h"
 
-void n3d_identity(mat4f_t & m);
+void n3d_identity(
+    mat4f_t & m);
 
 void n3d_frustum(
     mat4f_t & m,
-    float left,
-    float right,
-    float bottom,
-    float top,
-    float near,
-    float far);
+    const float left,
+    const float right,
+    const float bottom,
+    const float top,
+    const float near,
+    const float far);
 
 void n3d_rotate(
     mat4f_t & m,
-    float x,
-    float y,
-    float z
-);
+    const float a,
+    const float b,
+    const float c);
 
 namespace {
+
+    static const float n3d_pi = 3.14159265359f;
 
     template <typename type_t>
     vec2_t<type_t> vec2(const type_t x, const type_t y) {
@@ -61,6 +63,39 @@ namespace {
 
     vec3f_t operator * (const vec3f_t & a, const float s) {
         return vec3(a.x*s, a.y*s, a.z*s);
+    }
+
+    void operator += (vec4f_t & a, const vec4f_t & b) {
+        a.x += b.x;
+        a.y += b.y;
+        a.z += b.z;
+        a.w += b.w;
+    }
+
+    vec4f_t operator * (const vec4f_t & a, const float s) {
+        return vec4(a.x*s, a.y*s, a.z*s, a.w*s);
+    }
+
+    float n3d_lerp(float k, const float & a, const float & b) {
+        return ((1.f - k) * a) + (k * b);
+    }
+
+    vec2f_t n3d_lerp(float k, const vec2f_t & a, const vec2f_t & b) {
+        //(todo) SIMD lerp
+        return vec2<float>(
+            n3d_lerp(k, a.x, b.x),
+            n3d_lerp(k, a.y, b.y)
+            );
+    }
+
+    vec4f_t n3d_lerp(float k, const vec4f_t & a, const vec4f_t & b) {
+        //(todo) SIMD lerp
+        return vec4<float>(
+            n3d_lerp(k, a.x, b.x),
+            n3d_lerp(k, a.y, b.y),
+            n3d_lerp(k, a.z, b.z),
+            n3d_lerp(k, a.w, b.w)
+            );
     }
 
 } // namespace {}
