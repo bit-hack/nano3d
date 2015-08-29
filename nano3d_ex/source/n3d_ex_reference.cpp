@@ -10,7 +10,7 @@ namespace {
         return in;
     }
 
-    uint32_t rgb(float r, float g, float b) {
+    uint32_t rgb(float r, float g, float b, float a) {
 
         r = clamp(0.f, r, 1.f);
         g = clamp(0.f, g, 1.f);
@@ -37,7 +37,7 @@ void n3d_raster_reference_run(
     const uint32_t height = s.height_;
 
     // barycentric interpolants
-    vec3f_t bc_vy = { t.b0_.v_,  t.b1_.v_,  t.b2_.v_ };
+    vec3f_t bc_vy = { t.b0_.v_,  t.b1_.v_,  t.b2_.v_  };
     vec3f_t bc_sx = { t.b0_.sx_, t.b1_.sx_, t.b2_.sx_ };
     vec3f_t bc_sy = { t.b0_.sy_, t.b1_.sy_, t.b2_.sy_ };
     // shift to offset
@@ -45,9 +45,9 @@ void n3d_raster_reference_run(
     bc_vy += bc_sy * s.offset_.y;
 
     // colour interpolants
-    vec3f_t cl_vy = { t.r_.v_,  t.g_.v_,  t.b_.v_ };
-    vec3f_t cl_sx = { t.r_.sx_, t.g_.sx_, t.b_.sx_ };
-    vec3f_t cl_sy = { t.r_.sy_, t.g_.sy_, t.b_.sy_ };
+    vec4f_t cl_vy = { t.r_.v_,  t.g_.v_,  t.b_.v_ , t.a_.v_  };
+    vec4f_t cl_sx = { t.r_.sx_, t.g_.sx_, t.b_.sx_, t.a_.sx_ };
+    vec4f_t cl_sy = { t.r_.sy_, t.g_.sy_, t.b_.sy_, t.a_.sy_ };
     // shift to offset
     cl_vy += cl_sx * s.offset_.x;
     cl_vy += cl_sy * s.offset_.y;
@@ -65,7 +65,7 @@ void n3d_raster_reference_run(
     for (uint32_t y = 0; y < height; ++y) {
 
         vec3f_t bc_vx = bc_vy;
-        vec3f_t cl_vx = cl_vy;
+        vec4f_t cl_vx = cl_vy;
         float    w_vx = w_vy;
 
         for (uint32_t x = 0; x < width; ++x) {
@@ -77,8 +77,9 @@ void n3d_raster_reference_run(
                 float r = cl_vx.x / w_vx;
                 float g = cl_vx.y / w_vx;
                 float b = cl_vx.z / w_vx;
+                float a = cl_vx.w / w_vx;
 
-                dst[x + y * pitch] = rgb(r, g, b);
+                dst[x + y * pitch] = rgb(r, g, b, a);
             }
 
             bc_vx += bc_sx;

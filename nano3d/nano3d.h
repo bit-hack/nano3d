@@ -7,7 +7,7 @@ struct n3d_vertex_buffer_t {
     uint32_t   num_;
     vec3f_t  * pos_;
     vec2f_t  * uv_;
-    vec3f_t  * rgb_;
+    vec4f_t  * rgb_;
 };
 
 struct n3d_texture_t {
@@ -51,6 +51,7 @@ struct n3d_rasterizer_t {
         interp_t r_;    // red/w
         interp_t g_;    // green/w
         interp_t b_;    // blue/w
+        interp_t a_;    // alpha/w
 
         // triangle bounds
         vec2f_t min_;
@@ -89,24 +90,12 @@ enum n3d_matrix_e {
     n3d_model_view,
 };
 
-#if 0
-enum n3d_rasterizer_e {
-
-    n3d_raster_reference,
-};
-#endif
-
 struct nano3d_t {
 
     nano3d_t();
     ~nano3d_t();
     nano3d_t(const nano3d_t &) = delete;
-
-#if 0
-    n3d_rasterizer_t * rasterizer_new(n3d_rasterizer_e);
-    void rasterizer_delete(n3d_rasterizer_t *);
-#endif
-
+    
     n3d_result_e start(n3d_framebuffer_t *, uint32_t num_threads);
     n3d_result_e stop();
 

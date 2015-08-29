@@ -1,25 +1,160 @@
-#if defined _MSC_VER
-#include <intrin.h>
-#endif
 #include "n3d_pipeline.h"
+#include "n3d_util.h"
+#include "n3d_math.h"
+
+namespace {
+
+enum {
+    OUTSIDE = 0,     // both points outside
+    INSIDE      ,    // both points inside
+    SPLIT_A_IN  ,    // split and source inside
+    SPLIT_B_IN  ,    // split and dest inside
+};
+
+// v1, v2, t1, t2, vsplit, tsplit 
+uint32_t clip_near( const vec4f_t & v0, 
+                    const vec4f_t & v1, 
+                    const vec2f_t & t0, 
+                    const vec2f_t & t1, 
+                    const vec4f_t & c0, 
+                    const vec4f_t & c1, 
+                    vec4f_t & vsplit, 
+                    vec2f_t & tsplit,
+                    vec4f_t & csplit ) {
+
+    const float npv = 1.f;
+
+    bool a_out = (v0.w <= npv);
+    bool b_out = (v1.w <= npv);
+    // fully out
+    if (a_out & b_out)
+        return OUTSIDE;
+    // clipping
+    if (a_out ^ b_out) {
+        float a = v0.w;
+        float b = v1.w;
+        float c = 1.f;
+        float ba = (b - a);
+        float ca = (c - a);
+        if (ba == 0.f) {
+            vsplit = v0;
+            tsplit = t0;
+            csplit = c0;
+            vsplit.w = 1.f;
+            vsplit.z =-1.f;
+            return SPLIT_A_IN + a_out;
+        }
+        else {
+            float i = ca / ba;
+            // find intersection point
+            vsplit = n3d_lerp(i, v0, v1);
+            tsplit = n3d_lerp(i, t0, t1);
+            csplit = n3d_lerp(i, c0, c1);
+            return SPLIT_A_IN + a_out;
+        }
+    }
+    return INSIDE;
+}
+
+bool is_backfacing(const vec4f_t & a, const vec4f_t & b, const vec4f_t & c) {
+
+    // test z componant of cross product
+    return ((c.x - a.x)*(c.y - b.y) - (c.x - b.x)*(c.y - a.y)) > 0.f;
+}
+
+} // namespace {}
 
 void n3d_transform(n3d_vertex_t * v, const uint32_t num_verts, const mat4f_t & m) {
-
-    //(todo) faster matrix multiplication
-
+#define IX(x,y) (x*4+y)
+    const float * M = m.e;
     for (uint32_t q = 0; q < num_verts; ++q) {
-        vec4f_t s = v[q].p_;
-        vec4f_t d;
-        for (uint32_t i = 0; i < 4; i++) {
-            d.e[i] = 0.f;
-            for (uint32_t j = 0; j < 4; j++)
-                d.e[i] += m.e[j * 4 + i] * s.e[j];
-        }
-        v[q].p_ = d;
+        const vec4f_t & s = v[q].p_;
+        v[q].p_ = vec4<float>(
+            s.x*M[IX(0, 0)] + s.y*M[IX(1, 0)] + s.z*M[IX(2, 0)] + s.w*M[IX(3, 0)],
+            s.x*M[IX(0, 1)] + s.y*M[IX(1, 1)] + s.z*M[IX(2, 1)] + s.w*M[IX(3, 1)],
+            s.x*M[IX(0, 2)] + s.y*M[IX(1, 2)] + s.z*M[IX(2, 2)] + s.w*M[IX(3, 2)],
+            s.x*M[IX(0, 3)] + s.y*M[IX(1, 3)] + s.z*M[IX(2, 3)] + s.w*M[IX(3, 3)]);
     }
 }
 
+// this function only needs to clip triangles to the near plane however
+// we can also reject triangles that are fully outside the frustum too.
 void n3d_clip(n3d_vertex_t v[4], uint32_t & num_verts) {
+
+    //(note): these are not used, its just for easy debugging (remove)
+    const vec4f_t & v0 = v[0].p_;
+    const vec4f_t & v1 = v[1].p_;
+    const vec4f_t & v2 = v[2].p_;
+
+    // we can reject back faces here
+    if (is_backfacing(v[0].p_, v[1].p_, v[2].p_)) {
+        num_verts = 0;
+        return;
+    }
+
+    // incremented when a frustum plane rejects a point
+    uint32_t lx = 0, gx = 0;
+    uint32_t ly = 0, gy = 0;
+    uint32_t lz = 0, gz = 0;
+
+    // check for rejection by any frustum planes
+    for (uint32_t i = 0; i < 3; ++i) {
+        const vec4f_t & p = v[i].p_;
+        lx += (p.x <-p.w);
+        gx += (p.x > p.w);
+        ly += (p.y <-p.w);
+        gy += (p.y > p.w);
+        lz += (p.z <-p.w);
+        gz += (p.z > p.w);
+    }
+
+    // all points rejected by a frustum plane so skip triangle
+    if (lx == 3 || gx == 3 || ly == 3 || gy == 3 || lz == 3 || gz == 3) {
+        num_verts = 0;
+        return;
+    }
+
+    // triangle can be near plane clipped
+    if (lz > 0) {
+
+        n3d_vertex_t c[4];
+        uint32_t cid = 0;
+
+        for (uint32_t i = 0; i < 3; ++i) {
+
+            const n3d_vertex_t & ca = v[i];
+            const n3d_vertex_t & cb = v[(i + 1) % 3];
+            n3d_vertex_t cm;
+
+            uint32_t s = clip_near(
+                ca.p_, cb.p_,
+                ca.t_, cb.t_,
+                ca.c_, cb.c_,
+                cm.p_, cm.t_, cm.c_);
+
+            if (s == SPLIT_A_IN || s == SPLIT_B_IN) {
+                const float fep = 0.02f;
+                n3d_assert(cm.p_.w > (1.f - fep) && cm.p_.w < (1.f + fep));
+                n3d_assert(cm.p_.z >(-1.f - fep) && cm.p_.z < (-1.f + fep));
+            }
+
+            //(note): the starting vertex will be push in the last itteration
+            switch (s) {
+            case (OUTSIDE):     break;
+            case (SPLIT_A_IN):  c[cid++] = cm; break;
+            case (SPLIT_B_IN):  c[cid++] = cm;
+            case (INSIDE):      c[cid++] = cb; break;
+            default:
+                n3d_assert(!"bad split id");
+            }
+        }
+
+        n3d_assert(cid == 3 || cid == 4);
+        num_verts = cid;
+
+        for (uint32_t i = 0; i < num_verts; ++i)
+            v[i] = c[i];
+    }
 }
 
 void n3d_w_divide(n3d_vertex_t v[4], const uint32_t num_verts) {
