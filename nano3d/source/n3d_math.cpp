@@ -80,3 +80,15 @@ void n3d_rotate(
     M[IX(3, 2)] = 0.f;
     M[IX(3, 3)] = 1.f;
 }
+
+void n3d_translate(
+    mat4f_t & m,
+    const vec3f_t & p) {
+
+    float * M = m.e;
+
+    M[IX(3, 0)] = p.x;
+    M[IX(3, 1)] = p.y;
+    M[IX(3, 2)] = p.z;
+    M[IX(3, 3)] = 1.f;
+}

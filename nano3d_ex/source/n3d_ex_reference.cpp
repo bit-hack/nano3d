@@ -60,7 +60,8 @@ void n3d_raster_reference_run(
     w_vy += w_sx * s.offset_.x;
     w_vy += w_sy * s.offset_.y;
     
-    uint32_t * dst = s.color_;
+    uint32_t * dst   = s.color_;
+    float    * depth = s.depth_;
 
     for (uint32_t y = 0; y < height; ++y) {
 
@@ -72,23 +73,39 @@ void n3d_raster_reference_run(
 
             // check if inside triangle
             if (bc_vx.x >= 0.f && bc_vx.y >= 0.f && bc_vx.z >= 0.f) {
+                
+                // depth test (w buffering)
+                if (w_vx > depth[x]) {
 
-                // find fragment colour
-                float r = cl_vx.x / w_vx;
-                float g = cl_vx.y / w_vx;
-                float b = cl_vx.z / w_vx;
-                float a = cl_vx.w / w_vx;
+                    // find fragment colour
+                    float r = cl_vx.x / w_vx;
+                    float g = cl_vx.y / w_vx;
+                    float b = cl_vx.z / w_vx;
+                    float a = cl_vx.w / w_vx;
 
-                dst[x + y * pitch] = rgb(r, g, b, a);
+                    // update colour buffer
+                    dst[x] = rgb(r, g, b, a);
+
+                    // update (w) depth buffer
+                    depth[x] = w_vx;
+                }
             }
 
+            // step on x axis
             bc_vx += bc_sx;
             cl_vx += cl_sx;
-             w_vx += w_sx;
-        }
+            w_vx  += w_sx;
 
+        } // for (x axis)
+
+        // step on y axis
         bc_vy += bc_sy;
         cl_vy += cl_sy;
-         w_vy += w_sy;
-    }
+        w_vy  += w_sy;
+
+        // step the buffers
+        dst   += pitch;
+        depth += pitch;
+
+    } // for (y axis)
 }

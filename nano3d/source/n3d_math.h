@@ -20,6 +20,10 @@ void n3d_rotate(
     const float b,
     const float c);
 
+void n3d_translate(
+    mat4f_t & m,
+    const vec3f_t & p);
+
 namespace {
 
     static const float n3d_pi = 3.14159265359f;

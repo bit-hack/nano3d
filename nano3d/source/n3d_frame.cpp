@@ -3,13 +3,21 @@
 
 namespace {
 
-void send_all(n3d_frame_t * frame, n3d_command_t & cmd) {
-    for (uint32_t i=0; i<frame->num_bins_; ++i) {
-        n3d_bin_t & bin = frame->bin_[i];
-        while (! bin.pipe_.push(cmd))
+    // send a message to a single bin
+    void send_one(n3d_bin_t * bin, n3d_command_t & cmd) {
+        n3d_assert(bin);
+        while (!bin->pipe_.push(cmd))
             n3d_yield();
     }
-}
+
+    // send a message to all bins
+    void send_all(n3d_frame_t * frame, n3d_command_t & cmd) {
+        n3d_assert(frame);
+        for (uint32_t i=0; i<frame->num_bins_; ++i) {
+            n3d_bin_t & bin = frame->bin_[i];
+            send_one(&bin, cmd);
+        }
+    }
 
 } // namespace {}
 
@@ -87,18 +95,31 @@ void n3d_frame_send_triangle(
 
     n3d_assert(frame);
 
-    //(todo) send to all bins that this triangle aabb overlaps
-
-    n3d_bin_t & bin = *frame->bin_;
+    n3d_command_t cmd;
+    cmd.command_ = cmd.cmd_triangle;
+    cmd.triangle_ = triangle;
 
     //(note) if we are pushing commands into a command queue we need to be
     //       sure that there is some way to consume those commands in case
     //       that the queue is full, as we would block forever.
 
-    n3d_command_t cmd;
-    cmd.command_ = cmd.cmd_triangle;
-    cmd.triangle_ = triangle;
-    send_all(frame, cmd);
+    // itterate over all bins
+    for (uint32_t i = 0; i < frame->num_bins_; ++i) {
+        n3d_bin_t & bin = frame->bin_[i];
+
+        // reject when triangle cant overlap the bin
+        if (bin.offset_.x > (triangle.max_.x + 1.f))
+            continue;
+        if (bin.offset_.y > (triangle.max_.y + 1.f))
+            continue;
+        if ((bin.offset_.x + bin.width_) < triangle.min_.x)
+            continue;
+        if ((bin.offset_.y + bin.height_) < triangle.min_.y)
+            continue;
+
+        // send this triangle to the bin
+        send_one(&bin, cmd);
+    }
 }
 
 void n3d_frame_send_texture(
