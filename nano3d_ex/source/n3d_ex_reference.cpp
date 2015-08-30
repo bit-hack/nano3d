@@ -74,7 +74,7 @@ void n3d_raster_reference_run(
             // check if inside triangle
             if (bc_vx.x >= 0.f && bc_vx.y >= 0.f && bc_vx.z >= 0.f) {
                 
-                // depth test
+                // depth test (w buffering)
                 if (w_vx > depth[x]) {
 
                     // find fragment colour
@@ -83,12 +83,15 @@ void n3d_raster_reference_run(
                     float b = cl_vx.z / w_vx;
                     float a = cl_vx.w / w_vx;
 
+                    // update colour buffer
                     dst[x] = rgb(r, g, b, a);
+
+                    // update (w) depth buffer
                     depth[x] = w_vx;
                 }
             }
 
-            // step on z axis
+            // step on x axis
             bc_vx += bc_sx;
             cl_vx += cl_sx;
             w_vx  += w_sx;
