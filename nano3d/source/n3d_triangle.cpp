@@ -8,22 +8,22 @@ namespace {
         return (b.x - a.x)*(-a.y) - (b.y - a.y)*(-a.x);
     }
 
+    float max2(const float a, const float b) {
+        return (a > b) ? a : b;
+    }
+
+    float min2(const float a, const float b) {
+        return (a < b) ? a : b;
+    }
+
     float min3( const float a, const float b, const float c ) {
-        if (a < b) {
-            return a < c ? a : c;
-        }
-        else {
-            return b < c ? b : c;
-        }
+        float t = min2(a, b);
+        return (c < t) ? c : t;
     }
 
     float max3( const float a, const float b, const float c ) {
-        if (a > b) {
-            return a > c ? a : c;
-        }
-        else {
-            return b > c ? a : b;
-        }
+        float t = max2(a, b);
+        return (c > t) ? c : t;
     }
 };
 
