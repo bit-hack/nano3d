@@ -2,20 +2,10 @@ language: cpp
 compiler:
   - gcc
   - clang
-before_install:
+install:
   - sudo apt-get install libsdl1.2-dev ninja-build cmake
-before_script:
+script:
   - mkdir build
   - cd build
   - cmake -G Ninja ..
-script:
   - ninja
-branches:
-  only:
-    - master
-notifications:
-  recipients:
-    - aidan.dodds@googlemail.com
-  email:
-    on_success: always
-    on_failure: always
