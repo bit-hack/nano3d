@@ -132,7 +132,7 @@ struct app_t {
             // bind a model view matrix
             mat4f_t mvm;
             n3d_rotate(mvm, rx, ry, rz);
-            n3d_translate(mvm, vec3(sin(px), cos(py), sin(pz)-3.8f));
+            n3d_translate(mvm, vec3(sinf(px), cosf(py), sinf(pz)-3.8f));
             n3d_.bind(&mvm, n3d_model_view);
 
             // draw the cube
