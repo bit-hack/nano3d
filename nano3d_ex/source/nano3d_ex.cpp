@@ -1,5 +1,3 @@
-#pragma once
-
 #include "../nano3d_ex.h"
 
 extern 
