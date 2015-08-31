@@ -1,0 +1,11 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+install:
+  - sudo apt-get install libsdl1.2-dev ninja-build cmake
+script:
+  - mkdir build
+  - cd build
+  - cmake -G Ninja ..
+  - ninja
