@@ -1,18 +1,25 @@
 language: cpp
 compiler:
-  - gcc
+#  - gcc
   - clang
+
 before_install:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
-  - sudo apt-get update -qq
-  - if [ "$CXX" = "g++" ]; then sudo apt-get install -qq g++-4.8; fi
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
-  - if [ "$CXX" = "clang++" ]; then sudo apt-get install -qq libstdc++-4.8-dev; fi
-  - if [ "$CXX" == "clang++" ]; then sudo apt-get install --allow-unauthenticated -qq clang-3.4; fi
-  - if [ "$CXX" == "clang++" ]; then export CXX="clang++-3.4"; fi
+  - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
+         wget http://www.cmake.org/files/v3.3/cmake-3.3.0-Linux-i386.tar.gz
+      && tar -xzf cmake-3.3.0-Linux-i386.tar.gz
+      && sudo cp -fR cmake-3.3.0-Linux-i386/* /usr
+      && sudo apt-add-repository -y ppa:ubuntu-toolchain-r/test
+      && sudo apt-get -qq update
+      && sudo apt-get -qq install g++-4.8 libc6-i386 libsdl1.2-dev
+      && export CXX="g++-4.8"
+      && export CC="gcc-4.8"
+      ;
+    fi
+
 install:
   - cmake --version
-  - sudo apt-get install libsdl1.2-dev ninja-build cmake
+  - sudo apt-get install libsdl1.2-dev ninja-build
+
 script:
   - mkdir build
   - cd build
