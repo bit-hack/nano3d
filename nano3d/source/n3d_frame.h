@@ -17,7 +17,7 @@ struct n3d_frame_t {
 
 bool n3d_frame_create(
     n3d_frame_t * frame,
-    n3d_framebuffer_t * framebuffer);
+    const n3d_framebuffer_t * framebuffer);
 
 void n3d_frame_free(
     n3d_frame_t * frame);
@@ -28,16 +28,16 @@ void n3d_frame_send_triangle(
 
 void n3d_frame_send_texture(
     n3d_frame_t * frame,
-    n3d_texture_t * texture);
+    const n3d_texture_t * texture);
 
 void n3d_frame_send_rasterizer(
     n3d_frame_t * frame,
-    n3d_rasterizer_t * rasterizer);
+    const n3d_rasterizer_t * rasterizer);
 
 void n3d_frame_clear(
     n3d_frame_t * frame,
-    uint32_t argb,
-    float z);
+    const uint32_t argb,
+    const float z);
 
 void n3d_frame_present(
     n3d_frame_t * frame);

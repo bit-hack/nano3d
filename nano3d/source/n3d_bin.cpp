@@ -40,10 +40,10 @@ void n3d_bin_process (
     n3d_command_t cmd;
 
     n3d_rasterizer_t::state_t state;
-    state.color_  = bin->color_;
+    state.target_[n3d_target_pixel].uint32_ = bin->color_;
+    state.target_[n3d_target_depth].float_  = bin->depth_;
     state.width_  = bin->width_;
     state.height_ = bin->height_;
-    state.depth_  = bin->depth_;
     state.pitch_  = bin->pitch_;
     state.texure_ = bin->texture_;
     state.offset_ = bin->offset_;

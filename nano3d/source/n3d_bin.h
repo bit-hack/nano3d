@@ -19,8 +19,8 @@ struct n3d_command_t {
     union
     {
         n3d_rasterizer_t::triangle_t triangle_;
-        n3d_rasterizer_t * rasterizer_;
-        n3d_texture_t * texture_;
+        const n3d_rasterizer_t * rasterizer_;
+        const n3d_texture_t * texture_;
         struct {
             uint32_t color_;
             float depth_;
@@ -49,8 +49,8 @@ struct n3d_bin_t {
     n3d_command_pipe_t pipe_;
 
     // pipeline state
-    n3d_rasterizer_t * rasterizer_;
-    n3d_texture_t    * texture_;
+    const n3d_rasterizer_t * rasterizer_;
+    const n3d_texture_t    * texture_;
 
     // bin offset from [0,0]
     vec2f_t   offset_;

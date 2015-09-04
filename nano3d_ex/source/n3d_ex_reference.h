@@ -11,7 +11,6 @@ namespace {
     }
 
     uint32_t rgb(float r, float g, float b, float a) {
-
         r = clamp(0.f, r, 1.f);
         g = clamp(0.f, g, 1.f);
         b = clamp(0.f, b, 1.f);
@@ -25,19 +24,26 @@ namespace {
 
 } // namespace {}
 
+typedef uint32_t (*n3d_kernel_t)(
+        const uint32_t   old ,
+        const vec2f_t &  uv  ,
+        const vec4f_t &  rgba,
+        const float      z   ,
+        const uint32_t * tex);
+
 void n3d_raster_reference_run(
     const n3d_rasterizer_t::state_t &s,
     const n3d_rasterizer_t::triangle_t &t,
-    void *) {
+    void * user) {
 
-//    typedef n3d_rasterizer_t::triangle_t::interp_t interp_t;
+    typedef n3d_rasterizer_t::triangle_t::interp_t interp_t;
 
     const uint32_t pitch  = s.pitch_;
     const uint32_t width  = s.width_;
     const uint32_t height = s.height_;
 
     // barycentric interpolants
-    vec3f_t bc_vy = { t.b0_.v_, t.b1_.v_, t.b2_.v_ };
+    vec3f_t bc_vy = { t.b0_.v_,  t.b1_.v_,  t.b2_.v_  };
     vec3f_t bc_sx = { t.b0_.sx_, t.b1_.sx_, t.b2_.sx_ };
     vec3f_t bc_sy = { t.b0_.sy_, t.b1_.sy_, t.b2_.sy_ };
     // shift to offset
@@ -60,8 +66,8 @@ void n3d_raster_reference_run(
     w_vy += w_sx * s.offset_.x;
     w_vy += w_sy * s.offset_.y;
     
-    uint32_t * dst   = s.target_[n3d_target_pixel].uint32_;
-    float    * depth = s.target_[n3d_target_depth].float_;
+    uint32_t * dst   = s.color_;
+    float    * depth = s.depth_;
 
     for (uint32_t y = 0; y < height; ++y) {
 

@@ -4,14 +4,18 @@
 namespace {
 
     // send a message to a single bin
-    void send_one(n3d_bin_t * bin, n3d_command_t & cmd) {
+    void send_one(n3d_bin_t * bin,
+                  n3d_command_t & cmd) {
+
         n3d_assert(bin);
         while (!bin->pipe_.push(cmd))
             n3d_yield();
     }
 
     // send a message to all bins
-    void send_all(n3d_frame_t * frame, n3d_command_t & cmd) {
+    void send_all(n3d_frame_t * frame,
+                  n3d_command_t & cmd) {
+
         n3d_assert(frame);
         for (uint32_t i=0; i<frame->num_bins_; ++i) {
             n3d_bin_t & bin = frame->bin_[i];
@@ -21,9 +25,8 @@ namespace {
 
 } // namespace {}
 
-bool n3d_frame_create(
-    n3d_frame_t * frame,
-    n3d_framebuffer_t * framebuffer) {
+bool n3d_frame_create(n3d_frame_t * frame,
+                      const n3d_framebuffer_t * framebuffer) {
 
     const uint32_t bin_w = 64;
     const uint32_t bin_h = 64;
@@ -75,8 +78,7 @@ bool n3d_frame_create(
     return true;
 }
 
-void n3d_frame_free(
-    n3d_frame_t * frame) {
+void n3d_frame_free(n3d_frame_t * frame) {
 
     //(todo) kill all workers
 
@@ -122,9 +124,8 @@ void n3d_frame_send_triangle(
     }
 }
 
-void n3d_frame_send_texture(
-    n3d_frame_t * frame,
-    n3d_texture_t * texture) {
+void n3d_frame_send_texture(n3d_frame_t * frame,
+                            const n3d_texture_t * texture) {
 
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_texture;
@@ -132,9 +133,8 @@ void n3d_frame_send_texture(
     send_all(frame, cmd);
 }
 
-void n3d_frame_send_rasterizer(
-    n3d_frame_t * frame,
-    n3d_rasterizer_t * rasterizer) {
+void n3d_frame_send_rasterizer(n3d_frame_t * frame,
+                               const n3d_rasterizer_t * rasterizer) {
 
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_rasterizer;
@@ -142,10 +142,9 @@ void n3d_frame_send_rasterizer(
     send_all(frame, cmd);
 }
 
-void n3d_frame_clear(
-    n3d_frame_t * frame,
-    uint32_t argb,
-    float z) {
+void n3d_frame_clear(n3d_frame_t * frame,
+                     const uint32_t argb,
+                     const float z) {
 
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_clear;
@@ -154,8 +153,7 @@ void n3d_frame_clear(
     send_all(frame, cmd);
 }
 
-void n3d_frame_present(
-    n3d_frame_t * frame) {
+void n3d_frame_present(n3d_frame_t * frame) {
 
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_present;
