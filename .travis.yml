@@ -2,6 +2,7 @@ language: cpp
 compiler:
   - gcc
   - clang
+  - scan-build
 
 before_install:
   - if [ "${TRAVIS_OS_NAME}" = "linux" ]; then
