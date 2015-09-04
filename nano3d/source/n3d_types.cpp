@@ -17,6 +17,6 @@ struct n3d_triangle_stack {
     }
 
     void clear() {
-        head_;
+        head_ = 0;
     }
 };

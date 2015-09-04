@@ -36,7 +36,6 @@ namespace {
     uint32_t ix[] = {
 
 #define face(v0,v1,v2,v3) v0, v1, v2, v0, v2, v3
-
         face(0, 1, 3, 2),
         face(1, 5, 7, 3),
         face(5, 4, 6, 7),
@@ -44,9 +43,6 @@ namespace {
         face(4, 5, 1, 0),
         face(2, 3, 7, 6),
     };
-
-    float delta = 0.f;
-
 } // namespace {}
 
 struct app_t {
@@ -69,7 +65,7 @@ struct app_t {
             512,
             (uint32_t*)screen_->pixels
         };
-        n3d_.start(&framebuffer, 1);
+        n3d_.start(&framebuffer, 0, 1);
 
         // bind the vertex buffer
         n3d_vertex_buffer_t vb = {
@@ -122,7 +118,6 @@ struct app_t {
 
         float rx = 0.f, ry = 0.f, rz = 0.f;
         float jx = 0.f, jy = 0.f, jz = 0.f;
-
         float px = 0.f, py = 0.f, pz = 0.f;
 
         while (tick()) {

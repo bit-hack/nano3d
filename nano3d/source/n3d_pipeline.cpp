@@ -82,9 +82,11 @@ void n3d_transform(n3d_vertex_t * v, const uint32_t num_verts, const mat4f_t & m
 void n3d_clip(n3d_vertex_t v[4], uint32_t & num_verts) {
 
     //(note): these are not used, its just for easy debugging (remove)
+#if 0
     const vec4f_t & v0 = v[0].p_;
     const vec4f_t & v1 = v[1].p_;
     const vec4f_t & v2 = v[2].p_;
+#endif
 
     // we can reject back faces here
     if (is_backfacing(v[0].p_, v[1].p_, v[2].p_)) {

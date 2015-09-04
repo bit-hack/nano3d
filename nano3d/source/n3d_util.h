@@ -27,7 +27,9 @@ static type_t * checked(type_t * x) {
     return x;
 }
 
+#if 0
 static
 bool power_of_two(uint32_t x) {
     return ((x - 1) & x) == 0;
 }
+#endif

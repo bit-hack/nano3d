@@ -39,7 +39,10 @@ nano3d_t::~nano3d_t() {
     delete detail_;
 }
 
-n3d_result_e nano3d_t::start(n3d_framebuffer_t *f, uint32_t num_threads) {
+n3d_result_e nano3d_t::start(
+        n3d_framebuffer_t *f,
+        uint32_t num_planes,
+        uint32_t num_threads) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
     d_.framebuffer_ = *f;
@@ -56,6 +59,8 @@ n3d_result_e nano3d_t::start(n3d_framebuffer_t *f, uint32_t num_threads) {
 }
 
 n3d_result_e nano3d_t::stop() {
+
+//    nano3d_t::detail_t  & d_ = *checked(detail_);
 
     //(todo) send kill signal to worker threads, join
     return n3d_sucess;
@@ -137,19 +142,6 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
                        float(d_.framebuffer_.height_) };
         n3d_ndc_to_dc(v, num, sf);
 
-        n3d_rasterizer_t::state_t state = {
-
-            // render target pointers
-            d_.framebuffer_.pixels_,
-            nullptr,
-            nullptr,
-            // region to render
-            d_.framebuffer_.width_,
-            d_.framebuffer_.height_,
-            // render target pitch
-            d_.framebuffer_.width_
-        };
-
         // feed triangles to bins
         n3d_assert(num == 3 || num == 4);
         for (uint32_t i = 2; i < num; ++i) {
@@ -177,7 +169,7 @@ n3d_result_e nano3d_t::present() {
     n3d_bin_t * bin = nullptr;
     while (!d_.bin_man_.frame_is_done()) {
 
-        if (bin = d_.bin_man_.get_work(nullptr))
+        if ((bin = d_.bin_man_.get_work(nullptr)))
             n3d_bin_process(bin);
         else
             n3d_yield();

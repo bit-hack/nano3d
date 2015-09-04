@@ -60,7 +60,7 @@ struct app_t {
             512,
             (uint32_t*)screen_->pixels
         };
-        n3d_.start(&framebuffer, 1);
+        n3d_.start(&framebuffer, 0, 1);
 
         // bind the vertex buffer
         n3d_vertex_buffer_t vb = {

@@ -37,7 +37,6 @@ void n3d_bin_process (
 
     n3d_assert(bin);
 
-    bool active = true;
     n3d_command_t cmd;
 
     n3d_rasterizer_t::state_t state;

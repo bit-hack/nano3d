@@ -10,8 +10,8 @@ struct n3d_thread_t::detail_t {
 
     detail_t()
         : active_(1)
-        , thread_(nullptr)
         , id_(n3d_atomic_inc(next_id_))
+        , thread_(nullptr)
     {
     }
 

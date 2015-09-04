@@ -1,5 +1,3 @@
-#pragma 
-
 #include "n3d_decl.h"
 #include "n3d_forward.h"
 
