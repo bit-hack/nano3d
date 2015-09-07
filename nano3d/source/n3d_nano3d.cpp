@@ -40,9 +40,9 @@ nano3d_t::~nano3d_t() {
 }
 
 n3d_result_e nano3d_t::start(
-        n3d_framebuffer_t *f,
-        uint32_t num_planes,
-        uint32_t num_threads) {
+        const n3d_framebuffer_t *f,
+        const uint32_t num_planes,
+        const uint32_t num_threads) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
     d_.framebuffer_ = *f;
@@ -66,35 +66,44 @@ n3d_result_e nano3d_t::stop() {
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(n3d_vertex_buffer_t *in) {
+n3d_result_e nano3d_t::bind(const n3d_vertex_buffer_t *in) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
     d_.vertex_buffer_ = *in;
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(n3d_rasterizer_t *in) {
+n3d_result_e nano3d_t::bind(const n3d_rasterizer_t *in) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
     n3d_frame_send_rasterizer(&d_.frame_, in);
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(n3d_texture_t *in) {
+n3d_result_e nano3d_t::bind(const n3d_texture_t *in) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
     n3d_frame_send_texture(&d_.frame_, in);
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(mat4f_t *in, n3d_matrix_e slot) {
+n3d_result_e nano3d_t::bind(const mat4f_t *in,
+                            const n3d_matrix_e slot) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
     d_.matrix_[slot] = *in;
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices) {
+n3d_result_e nano3d_t::bind(const n3d_user_data_t * in) {
+
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_frame_send_user_data(&d_.frame_, in);
+    return n3d_sucess;
+}
+
+n3d_result_e nano3d_t::draw(const uint32_t num_indices,
+                            const uint32_t * indices) {
 
     nano3d_t::detail_t  & d_ = *checked(detail_);
     n3d_vertex_buffer_t & vb = d_.vertex_buffer_;
@@ -106,17 +115,21 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices, const uint32_t * indices
         return n3d_fail;
 
     for (uint32_t i = 0; i < num_indices; i += 3) {
+        //(todo) Doin steps instead of serial pipeline.
+        //      1. Transform all pending vertices we can.
+        //      2. Clip all triangles.
+        //      3. Etc.
 
         const uint32_t i0 = indices[i + 0];
         const uint32_t i1 = indices[i + 1];
         const uint32_t i2 = indices[i + 2];
 
         vec2f_t uv = vec2(0.f, 0.f);
-        vec4f_t rgb = vec4(1.f, 1.f, 1.f, 1.f);
+        vec4f_t rgba = vec4(1.f, 1.f, 1.f, 1.f);
 
-        v[0] = { vec4(vb.pos_[i0]), vb.uv_ ? vb.uv_[i0] : uv, vb.rgb_ ? vb.rgb_[i0] : rgb };
-        v[1] = { vec4(vb.pos_[i1]), vb.uv_ ? vb.uv_[i1] : uv, vb.rgb_ ? vb.rgb_[i1] : rgb };
-        v[2] = { vec4(vb.pos_[i2]), vb.uv_ ? vb.uv_[i2] : uv, vb.rgb_ ? vb.rgb_[i2] : rgb };
+        v[0] = { vec4(vb.pos_[i0]), vb.uv_ ? vb.uv_[i0] : uv, vb.rgba_ ? vb.rgba_[i0] : rgba };
+        v[1] = { vec4(vb.pos_[i1]), vb.uv_ ? vb.uv_[i1] : uv, vb.rgba_ ? vb.rgba_[i1] : rgba };
+        v[2] = { vec4(vb.pos_[i2]), vb.uv_ ? vb.uv_[i2] : uv, vb.rgba_ ? vb.rgba_[i2] : rgba };
 
         // we have 3 vertices to start with but due to near plane clipping
         // this could increase to 4 vertices.  the following functions are
@@ -180,9 +193,30 @@ n3d_result_e nano3d_t::present() {
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::clear(uint32_t argb, float z) {
+n3d_result_e nano3d_t::clear(const uint32_t rgba,
+                             const float depth) {
+
     nano3d_t::detail_t & d_ = *checked(detail_);
     n3d_frame_t & frame = d_.frame_;
-    n3d_frame_clear(&frame, argb, z);
+    n3d_frame_clear(&frame, rgba, depth);
     return n3d_result_e::n3d_sucess;
 }
+
+n3d_result_e nano3d_t::n3d_project(const uint32_t num,
+                                   const vec4f_t * in,
+                                   vec4f_t * out) {
+
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_transform (num, d_.matrix_[n3d_matrix_e::n3d_model_view], in, out );
+    return n3d_result_e::n3d_sucess;
+}
+
+n3d_result_e nano3d_t::n3d_unproject(const uint32_t num,
+                                     const vec2f_t * in,
+                                     vec3f_t * dir,
+                                     vec3f_t * origin) {
+
+    //todo: implement
+    return n3d_result_e::n3d_fail;
+}
+
