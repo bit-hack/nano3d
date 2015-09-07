@@ -5,12 +5,12 @@ namespace {
 
     void bin_clear(n3d_bin_t &bin, uint32_t argb, float depth) {
 
-        const uint32_t height = bin.height_;
-        const uint32_t width = bin.width_;
-        const uint32_t pitch = bin.pitch_;
+        const uint32_t height = bin.state_.height_;
+        const uint32_t width = bin.state_.width_;
+        const uint32_t pitch = bin.state_.pitch_;
 
-        uint32_t *c = bin.color_;
-        float *z = bin.depth_;
+        uint32_t *c = bin.state_.target_[n3d_target_pixel].uint32_;
+        float *z = bin.state_.target_[n3d_target_depth].float_;
 
         for (uint32_t y = 0; y < height; ++y) {
 
@@ -39,14 +39,7 @@ void n3d_bin_process (
 
     n3d_command_t cmd;
 
-    n3d_rasterizer_t::state_t state;
-    state.color_  = bin->color_;
-    state.width_  = bin->width_;
-    state.height_ = bin->height_;
-    state.depth_  = bin->depth_;
-    state.pitch_  = bin->pitch_;
-    state.texure_ = bin->texture_;
-    state.offset_ = bin->offset_;
+    n3d_rasterizer_t::state_t & state = bin->state_;
 
     while (true) {
 
@@ -59,10 +52,12 @@ void n3d_bin_process (
         case (n3d_command_t::cmd_triangle):
 
             if (bin->rasterizer_) {
-                n3d_assert (bin->rasterizer_->run_);
-                bin->rasterizer_->run_(state,
-                                       cmd.triangle_,
-                                       bin->rasterizer_->user_);
+                
+                n3d_assert (bin->rasterizer_->raster_proc_);
+                bin->rasterizer_->raster_proc_(
+                    state,
+                    cmd.triangle_,
+                    bin->rasterizer_->user_);
             }
             break;
 
@@ -77,7 +72,7 @@ void n3d_bin_process (
             break;
 
         case (n3d_command_t::cmd_texture):
-            bin->texture_ = cmd.texture_;
+            bin->state_.texure_ = cmd.texture_;
             state.texure_ = cmd.texture_;
             break;
 

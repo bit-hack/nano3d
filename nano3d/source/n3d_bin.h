@@ -12,19 +12,22 @@ struct n3d_command_t {
         cmd_rasterizer  ,
         cmd_texture     ,
         cmd_present     ,
-        cmd_clear
+        cmd_clear       ,
+        // custom user data to be passed to the rasterizer
+        cmd_user_data   ,
     }
     command_;
 
     union
     {
         n3d_rasterizer_t::triangle_t triangle_;
-        n3d_rasterizer_t * rasterizer_;
-        n3d_texture_t * texture_;
+        const n3d_rasterizer_t * rasterizer_;
+        const n3d_texture_t * texture_;
         struct {
             uint32_t color_;
             float depth_;
         } clear_;
+        n3d_user_data_t user_data_;
     };
 };
 
@@ -35,11 +38,13 @@ struct n3d_bin_t {
     n3d_bin_t()
         : pipe_()
         , rasterizer_(nullptr)
-        , texture_(nullptr)
-        , color_(nullptr)
-        , depth_(nullptr)
         , counter_(nullptr)
     {
+        state_.target_[n3d_target_pixel].uint32_ = nullptr;
+        state_.target_[n3d_target_depth].float_  = nullptr;
+        state_.target_[n3d_target_aux_1].uint32_ = nullptr;
+        state_.target_[n3d_target_aux_2].uint32_ = nullptr;
+        state_.texure_ = nullptr;
     }
 
     // locked when a thread is processing a bin
@@ -49,23 +54,10 @@ struct n3d_bin_t {
     n3d_command_pipe_t pipe_;
 
     // pipeline state
-    n3d_rasterizer_t * rasterizer_;
-    n3d_texture_t    * texture_;
-
-    // bin offset from [0,0]
-    vec2f_t   offset_;
+    const n3d_rasterizer_t * rasterizer_;
 
     //(todo) move to this instead?
     n3d_rasterizer_t::state_t state_;
-
-    // render targets
-    uint32_t *color_;
-    float    *depth_;
-    uint32_t  pitch_;
-
-    // bin size
-    uint32_t  width_;
-    uint32_t  height_;
 
     // the current frame number
     uint32_t frame_;
@@ -74,5 +66,6 @@ struct n3d_bin_t {
     n3d_atomic_t * counter_;
 };
 
+// process all work pending for a bin
 void n3d_bin_process (
     n3d_bin_t * bin);

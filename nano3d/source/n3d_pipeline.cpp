@@ -65,28 +65,18 @@ bool is_backfacing(const vec4f_t & a, const vec4f_t & b, const vec4f_t & c) {
 } // namespace {}
 
 void n3d_transform(n3d_vertex_t * v, const uint32_t num_verts, const mat4f_t & m) {
-#define IX(x,y) (x*4+y)
-    const float * M = m.e;
+
+    //(todo) we can do this more efficiently
+
     for (uint32_t q = 0; q < num_verts; ++q) {
-        const vec4f_t & s = v[q].p_;
-        v[q].p_ = vec4<float>(
-            s.x*M[IX(0, 0)] + s.y*M[IX(1, 0)] + s.z*M[IX(2, 0)] + s.w*M[IX(3, 0)],
-            s.x*M[IX(0, 1)] + s.y*M[IX(1, 1)] + s.z*M[IX(2, 1)] + s.w*M[IX(3, 1)],
-            s.x*M[IX(0, 2)] + s.y*M[IX(1, 2)] + s.z*M[IX(2, 2)] + s.w*M[IX(3, 2)],
-            s.x*M[IX(0, 3)] + s.y*M[IX(1, 3)] + s.z*M[IX(2, 3)] + s.w*M[IX(3, 3)]);
+        vec4f_t & s = v[q].p_;
+        n3d_transform (1, m, &s, &s);
     }
 }
 
 // this function only needs to clip triangles to the near plane however
 // we can also reject triangles that are fully outside the frustum too.
 void n3d_clip(n3d_vertex_t v[4], uint32_t & num_verts) {
-
-    //(note): these are not used, its just for easy debugging (remove)
-#if 0
-    const vec4f_t & v0 = v[0].p_;
-    const vec4f_t & v1 = v[1].p_;
-    const vec4f_t & v2 = v[2].p_;
-#endif
 
     // we can reject back faces here
     if (is_backfacing(v[0].p_, v[1].p_, v[2].p_)) {
