@@ -37,13 +37,13 @@ struct n3d_bin_t {
     n3d_bin_t()
         : pipe_()
         , rasterizer_(nullptr)
-#if 0
-        , texture_(nullptr)
-        , color_(nullptr)
-        , depth_(nullptr)
-#endif
         , counter_(nullptr)
     {
+        state_.target_[n3d_target_pixel].uint32_ = nullptr;
+        state_.target_[n3d_target_depth].float_  = nullptr;
+        state_.target_[n3d_target_aux_1].uint32_ = nullptr;
+        state_.target_[n3d_target_aux_2].uint32_ = nullptr;
+        state_.texure_ = nullptr;
     }
 
     // locked when a thread is processing a bin
@@ -54,26 +54,9 @@ struct n3d_bin_t {
 
     // pipeline state
     const n3d_rasterizer_t * rasterizer_;
-#if 0
-    const n3d_texture_t    * texture_;
-
-    // bin offset from [0,0]
-    vec2f_t   offset_;
-#endif
 
     //(todo) move to this instead?
     n3d_rasterizer_t::state_t state_;
-
-#if 0
-    // render targets
-    uint32_t *color_;
-    float    *depth_;
-    uint32_t  pitch_;
-
-    // bin size
-    uint32_t  width_;
-    uint32_t  height_;
-#endif
 
     // the current frame number
     uint32_t frame_;

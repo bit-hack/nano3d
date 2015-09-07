@@ -52,11 +52,11 @@ bool n3d_frame_create(n3d_frame_t * frame,
     for (int i=0; i<nbins; ++i) {
 
         n3d_bin_t & bin = frame->bin_[i];
-        n3d_rasterizer_t::state_t & state = frame->bin_->state_;
+        auto & state = bin.state_;
 
-        bin.state_.width_  = bin_w;
-        bin.state_.height_ = bin_h;
-        bin.state_.pitch_  = framebuffer->width_;
+        state.width_  = bin_w;
+        state.height_ = bin_h;
+        state.pitch_  = framebuffer->width_;
 
         uint32_t iox = (i % bx) * bin_w;
         uint32_t ioy = (i / bx) * bin_w;
@@ -64,7 +64,7 @@ bool n3d_frame_create(n3d_frame_t * frame,
         state.offset_.x = float(iox);
         state.offset_.y = float(ioy);
 
-        // linear offset from origin [0,0]
+        // linear bin offset from screen origin [0,0]
         uint32_t fboffs = + iox + ioy * framebuffer->width_;
 
         state.target_[n3d_target_depth].float_ = fboffs + depth;
