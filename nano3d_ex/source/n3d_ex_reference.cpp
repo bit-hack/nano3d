@@ -25,19 +25,22 @@ namespace {
 
 } // namespace {}
 
-void n3d_raster_reference_run(
-    const n3d_rasterizer_t::state_t &s,
-    const n3d_rasterizer_t::triangle_t &t,
-    void *) {
-
-//    typedef n3d_rasterizer_t::triangle_t::interp_t interp_t;
+void n3d_raster_reference_raster(
+    const int num,
+    const n3d_rasterizer_t::state_t    * state,
+    const n3d_rasterizer_t::triangle_t * triangle,
+    const n3d_rasterizer_t::scratch_t  * scratch,
+    void * user)
+{    
+    const n3d_rasterizer_t::state_t & s = *state;
+    const n3d_rasterizer_t::triangle_t & t = *triangle;
 
     const uint32_t pitch  = s.pitch_;
     const uint32_t width  = s.width_;
     const uint32_t height = s.height_;
 
     // barycentric interpolants
-    vec3f_t bc_vy = { t.b0_.v_, t.b1_.v_, t.b2_.v_ };
+    vec3f_t bc_vy = { t.b0_.v_,  t.b1_.v_, t.b2_.v_ };
     vec3f_t bc_sx = { t.b0_.sx_, t.b1_.sx_, t.b2_.sx_ };
     vec3f_t bc_sy = { t.b0_.sy_, t.b1_.sy_, t.b2_.sy_ };
     // shift to offset

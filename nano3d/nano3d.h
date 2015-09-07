@@ -87,7 +87,7 @@ struct n3d_rasterizer_t {
         uint8_t  u8_ [16];
     };
 
-    //
+    // 
     union target_t {
         uint32_t * uint32_;
         float    * float_;
@@ -118,31 +118,17 @@ struct n3d_rasterizer_t {
 
     // user data passed to the rasterizer
     void *user_;
+    
+    void (*triangle_proc_)(vec3f_t pos[3],
+                           vec2f_t uv[3],
+                           vec4f_t rgba[3],
+                           scratch_t & scratch,
+                           void * user);
 
-#if 0
-    //note: we cant use class storage since we are multithreaded
-    //      so we need some shared data to be passed through the
-    //      pipeline from vertex shader to raster proc.
-    //      we can store this in the state_t structure.
-
-    void (*vertex_proc_)(const int num,
-                         vec3f_t * pos,
-                         vec2f_t * uv,
-                         vec4f_t * rgba,
-                         scratch_t * scratch,
+    void (*raster_proc_)(const state_t & state,
+                         const triangle_t & triangle,
+                         const scratch_t & scratch,
                          void * user);
-
-    void (*raster_proc_)(const int num,
-                         const state_t * state,
-                         const triangle_t * triangle,
-                         const scratch_t * scratch,
-                         void * user);
-#else
-    // function pointer to the rasterizer
-    void (*run_)(const state_t &,
-                 const triangle_t &,
-                 void * user);
-#endif
 };
 
 // return codes for n3d api functions
@@ -256,22 +242,29 @@ struct nano3d_t {
     //
     n3d_result_e present();
 
-#if 0
     // description:
     //      project a point from world space to screen space.
     //
-    void n3d_project(const uint32_t num,
-                     const vec3f_t * in,
-                     vec2f_t * out);
+    // input:
+    //      num         - number of vertices to project
+    //      input       - input world space point
+    //      output      - output screen space point
+    n3d_result_e n3d_project(const uint32_t num,
+                             const vec3f_t * input,
+                             vec2f_t * output);
 
     // description:
     //      project a point from screen space to world space.
     //
-    void n3d_unproject(const uint32_t num,
-                       const vec2f_t * in,
-                       vec3f_t * dir,
-                       vec3f_t * origin);
-#endif
+    // input:
+    //      num         - number of vertices to un project
+    //      in          - input screen space points
+    //      dir         - output direction vector from origin
+    //      origin      - world space camera position
+    n3d_result_e n3d_unproject(const uint32_t num,
+                               const vec2f_t * in,
+                               vec3f_t * dir,
+                               vec3f_t * origin);
 
 protected:
 

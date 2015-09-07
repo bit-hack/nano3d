@@ -190,3 +190,20 @@ n3d_result_e nano3d_t::clear(const uint32_t rgba,
     n3d_frame_clear(&frame, rgba, depth);
     return n3d_result_e::n3d_sucess;
 }
+
+n3d_result_e nano3d_t::n3d_project(const uint32_t num,
+                                   const vec3f_t * in,
+                                   vec2f_t * out) {
+
+    //todo: implement
+    return n3d_result_e::n3d_fail;
+}
+
+n3d_result_e nano3d_t::n3d_unproject(const uint32_t num,
+                                     const vec2f_t * in,
+                                     vec3f_t * dir,
+                                     vec3f_t * origin) {
+
+    //todo: implement
+    return n3d_result_e::n3d_fail;
+}
