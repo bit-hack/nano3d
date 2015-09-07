@@ -34,6 +34,10 @@ void n3d_frame_send_rasterizer(
     n3d_frame_t * frame,
     const n3d_rasterizer_t * rasterizer);
 
+void n3d_frame_send_user_data(
+    n3d_frame_t * frame,
+    const n3d_user_data_t * user_data);
+
 void n3d_frame_clear(
     n3d_frame_t * frame,
     const uint32_t argb,

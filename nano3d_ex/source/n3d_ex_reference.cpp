@@ -28,7 +28,6 @@ namespace {
 void n3d_raster_reference_raster(
     const n3d_rasterizer_t::state_t    & s,
     const n3d_rasterizer_t::triangle_t & t,
-    const n3d_rasterizer_t::scratch_t  & scratch,
     void * user)
 {    
     const uint32_t pitch  = s.pitch_;

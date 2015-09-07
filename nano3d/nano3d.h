@@ -23,11 +23,11 @@ struct n3d_texture_t {
     uint32_t   width_;
     uint32_t   height_;
 
-    // raw texel data as 32bits per pixel
+    // raw texel data as 32bits per pixel ARGB
     uint32_t * texels_;
 };
 
-// framebuffer definition
+// frame buffer definition
 //      this forms the render target for an n3d pipeline and
 //      all output will be written here.
 struct n3d_framebuffer_t {
@@ -38,6 +38,17 @@ struct n3d_framebuffer_t {
 
     // raw pixel data as 32bits per pixel
     uint32_t * pixels_;
+};
+
+// user data definition
+//      user data can be passed synchronously to the rasterizer
+struct n3d_user_data_t {
+
+    union {
+        uint8_t  uint8_[32];
+        uint32_t uint32_[4];
+        vec4f_t  vec4f_;
+    };
 };
 
 // rasterizer definition
@@ -77,17 +88,11 @@ struct n3d_rasterizer_t {
         // triangle bounds in screen space
         vec2f_t min_;
         vec2f_t max_;
+
+        n3d_user_data_t user_;
     };
 
-    // additional data that can be passed from vertex
-    // stage to rasterizer stage.
-    union scratch_t {
-        uint32_t u32_[4];
-        float    f32_[4];
-        uint8_t  u8_ [16];
-    };
-
-    // 
+    // generic render target
     union target_t {
         uint32_t * uint32_;
         float    * float_;
@@ -111,30 +116,14 @@ struct n3d_rasterizer_t {
 
         // bin offset from screen origin [0,0]
         vec2f_t offset_;
-
-        // additional data
-        scratch_t scratch_;
     };
 
     // user data passed to the rasterizer
     void *user_;
 
-    // per vertex pre processing
-    void (*vertex_proc_)(vec3f_t & pos,
-                         vec2f_t & uv,
-                         vec4f_t & rgba);
-
-    // per triangle pre processing
-    void (*triangle_proc_)(vec3f_t pos[3],
-                           vec2f_t uv[3],
-                           vec4f_t rgba[3],
-                           scratch_t & scratch,
-                           void * user);
-
     // triangle rasterizer
     void (*raster_proc_)(const state_t & state,
                          const triangle_t & triangle,
-                         const scratch_t & scratch,
                          void * user);
 };
 
@@ -180,7 +169,7 @@ struct nano3d_t {
     //      any other functions.
     //
     // inputs:
-    //      frame       - input framebuffer which is the render target
+    //      frame       - input frame buffer which is the render target
     //      num_planes  - number of additional colour planes to allocate.
     //                    each colour plane is 32bits per pixel.
     //      num_threads - number of worker threads to spawn for rendering.
@@ -191,13 +180,15 @@ struct nano3d_t {
     // description:
     //      shut down an n3d rendering context.
     //
+    // inputs:
+    //      n/a
     n3d_result_e stop();
 
     // description:
-    //      clear the n3d framebuffer colour and depth planes.
+    //      clear the n3d frame buffer colour and depth planes.
     //
     // inputs:
-    //      rgba        - colour to clear framebuffer to
+    //      rgba        - colour to clear frame buffer to
     //      depth       - value to clear depth buffer to
     n3d_result_e clear(const uint32_t rgba,
                        const float depth);
@@ -234,6 +225,14 @@ struct nano3d_t {
                       const n3d_matrix_e slot);
 
     // description:
+    //      bin a set of user data to the current n3d pipeline.
+    //
+    // input:
+    //      in          - the user data to be 
+    // 
+    n3d_result_e bind(const n3d_user_data_t * in);
+
+    // description:
     //      rasterize elements from the currently bound vertex buffer.
     //
     // inputs:
@@ -245,7 +244,7 @@ struct nano3d_t {
 
     // description:
     //      flush the pipeline and make sure all output is present
-    //      in the given rendertarget.
+    //      in the given render target.
     //
     n3d_result_e present();
 
@@ -253,18 +252,18 @@ struct nano3d_t {
     //      project a point from world space to screen space.
     //
     // input:
-    //      num         - number of vertices to project
+    //      num         - number of points to project
     //      input       - input world space point
     //      output      - output screen space point
     n3d_result_e n3d_project(const uint32_t num,
-                             const vec3f_t * input,
-                             vec2f_t * output);
+                             const vec4f_t * in,
+                             vec4f_t * out);
 
     // description:
     //      project a point from screen space to world space.
     //
     // input:
-    //      num         - number of vertices to un project
+    //      num         - number of points to un project
     //      in          - input screen space points
     //      dir         - output direction vector from origin
     //      origin      - world space camera position

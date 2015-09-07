@@ -92,3 +92,23 @@ void n3d_translate(
     M[IX(3, 2)] = p.z;
     M[IX(3, 3)] = 1.f;
 }
+
+/* transform an array of vectors by a matrix */
+void n3d_transform(const uint32_t num_verts, 
+                   const mat4f_t & m, 
+                   const vec4f_t * in, 
+                   vec4f_t * out) {
+
+    const float * M = m.e;
+    for (uint32_t q = 0; q < num_verts; ++q) {
+
+        //(todo): unroll and use SIMD instructions
+
+        const vec4f_t & s = in [q];
+        out[q] = vec4<float>(
+            s.x*M[IX(0, 0)] + s.y*M[IX(1, 0)] + s.z*M[IX(2, 0)] + s.w*M[IX(3, 0)],
+            s.x*M[IX(0, 1)] + s.y*M[IX(1, 1)] + s.z*M[IX(2, 1)] + s.w*M[IX(3, 1)],
+            s.x*M[IX(0, 2)] + s.y*M[IX(1, 2)] + s.z*M[IX(2, 2)] + s.w*M[IX(3, 2)],
+            s.x*M[IX(0, 3)] + s.y*M[IX(1, 3)] + s.z*M[IX(2, 3)] + s.w*M[IX(3, 3)]);
+    }
+}

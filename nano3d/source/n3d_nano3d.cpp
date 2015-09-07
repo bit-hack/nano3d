@@ -95,6 +95,13 @@ n3d_result_e nano3d_t::bind(const mat4f_t *in,
     return n3d_sucess;
 }
 
+n3d_result_e nano3d_t::bind(const n3d_user_data_t * in) {
+
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_frame_send_user_data(&d_.frame_, in);
+    return n3d_sucess;
+}
+
 n3d_result_e nano3d_t::draw(const uint32_t num_indices,
                             const uint32_t * indices) {
 
@@ -108,6 +115,10 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices,
         return n3d_fail;
 
     for (uint32_t i = 0; i < num_indices; i += 3) {
+        //(todo) Doin steps instead of serial pipeline.
+        //      1. Transform all pending vertices we can.
+        //      2. Clip all triangles.
+        //      3. Etc.
 
         const uint32_t i0 = indices[i + 0];
         const uint32_t i1 = indices[i + 1];
@@ -192,11 +203,12 @@ n3d_result_e nano3d_t::clear(const uint32_t rgba,
 }
 
 n3d_result_e nano3d_t::n3d_project(const uint32_t num,
-                                   const vec3f_t * in,
-                                   vec2f_t * out) {
+                                   const vec4f_t * in,
+                                   vec4f_t * out) {
 
-    //todo: implement
-    return n3d_result_e::n3d_fail;
+    nano3d_t::detail_t & d_ = *checked(detail_);
+    n3d_transform (num, d_.matrix_[n3d_matrix_e::n3d_model_view], in, out );
+    return n3d_result_e::n3d_sucess;
 }
 
 n3d_result_e nano3d_t::n3d_unproject(const uint32_t num,
@@ -207,3 +219,4 @@ n3d_result_e nano3d_t::n3d_unproject(const uint32_t num,
     //todo: implement
     return n3d_result_e::n3d_fail;
 }
+

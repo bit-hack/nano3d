@@ -52,14 +52,11 @@ void n3d_bin_process (
         case (n3d_command_t::cmd_triangle):
 
             if (bin->rasterizer_) {
-
-                n3d_rasterizer_t::scratch_t scratch;
-
+                
                 n3d_assert (bin->rasterizer_->raster_proc_);
                 bin->rasterizer_->raster_proc_(
                     state,
                     cmd.triangle_,
-                    scratch,
                     bin->rasterizer_->user_);
             }
             break;

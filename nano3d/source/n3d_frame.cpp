@@ -49,30 +49,36 @@ bool n3d_frame_create(n3d_frame_t * frame,
     n3d_assert(depth);
     frame->depth_ = depth;
 
+    // for each bin
     for (int i=0; i<nbins; ++i) {
 
         n3d_bin_t & bin = frame->bin_[i];
         auto & state = bin.state_;
 
+        // frame buffer dimensions
         state.width_  = bin_w;
         state.height_ = bin_h;
         state.pitch_  = framebuffer->width_;
 
+        // bin integer screen space location
         uint32_t iox = (i % bx) * bin_w;
         uint32_t ioy = (i / bx) * bin_w;
 
+        // bin screen space location
         state.offset_.x = float(iox);
         state.offset_.y = float(ioy);
 
         // linear bin offset from screen origin [0,0]
         uint32_t fboffs = + iox + ioy * framebuffer->width_;
 
-        state.target_[n3d_target_depth].float_ = fboffs + depth;
+        // render target state
+        state.target_[n3d_target_depth].float_  = fboffs + depth;
         state.target_[n3d_target_pixel].uint32_ = fboffs + framebuffer->pixels_;
-
-        bin.rasterizer_ = nullptr;
+        state.target_[n3d_target_aux_1].uint32_ = nullptr;
+        state.target_[n3d_target_aux_2].uint32_ = nullptr;
         state.texure_ = nullptr;
 
+        bin.rasterizer_ = nullptr;
         bin.frame_ = 0;
     }
 
@@ -106,7 +112,7 @@ void n3d_frame_send_triangle(
     //       sure that there is some way to consume those commands in case
     //       that the queue is full, as we would block forever.
 
-    // itterate over all bins
+    // iterate over all bins
     for (uint32_t i = 0; i < frame->num_bins_; ++i) {
         n3d_bin_t & bin = frame->bin_[i];
         auto & state = bin.state_;
@@ -160,4 +166,12 @@ void n3d_frame_present(n3d_frame_t * frame) {
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_present;
     send_all(frame, cmd);
+}
+
+void n3d_frame_send_user_data(n3d_frame_t * frame,
+                              const n3d_user_data_t * user_data) {
+
+    n3d_command_t cmd;
+    cmd.command_ = cmd.cmd_user_data;
+    cmd.user_data_ = *user_data;
 }

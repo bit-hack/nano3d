@@ -24,6 +24,12 @@ void n3d_translate(
     mat4f_t & m,
     const vec3f_t & p);
 
+void n3d_transform (
+    const uint32_t num_verts, 
+    const mat4f_t & m,
+    const vec4f_t * in, 
+          vec4f_t * out);
+
 namespace {
 
     static const float n3d_pi = 3.14159265359f;

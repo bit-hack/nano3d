@@ -14,7 +14,7 @@ struct n3d_command_t {
         cmd_present     ,
         cmd_clear       ,
         // custom user data to be passed to the rasterizer
-        cmd_user        ,
+        cmd_user_data   ,
     }
     command_;
 
@@ -27,6 +27,7 @@ struct n3d_command_t {
             uint32_t color_;
             float depth_;
         } clear_;
+        n3d_user_data_t user_data_;
     };
 };
 
@@ -65,5 +66,6 @@ struct n3d_bin_t {
     n3d_atomic_t * counter_;
 };
 
+// process all work pending for a bin
 void n3d_bin_process (
     n3d_bin_t * bin);
