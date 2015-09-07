@@ -52,25 +52,26 @@ bool n3d_frame_create(n3d_frame_t * frame,
     for (int i=0; i<nbins; ++i) {
 
         n3d_bin_t & bin = frame->bin_[i];
+        n3d_rasterizer_t::state_t & state = frame->bin_->state_;
 
-        bin.width_  = bin_w;
-        bin.height_ = bin_h;
-        bin.pitch_  = framebuffer->width_;
+        bin.state_.width_  = bin_w;
+        bin.state_.height_ = bin_h;
+        bin.state_.pitch_  = framebuffer->width_;
 
         uint32_t iox = (i % bx) * bin_w;
         uint32_t ioy = (i / bx) * bin_w;
 
-        bin.offset_.x = float(iox);
-        bin.offset_.y = float(ioy);
+        state.offset_.x = float(iox);
+        state.offset_.y = float(ioy);
 
         // linear offset from origin [0,0]
         uint32_t fboffs = + iox + ioy * framebuffer->width_;
 
-        bin.depth_ = fboffs + depth;
-        bin.color_ = fboffs + framebuffer->pixels_;
+        state.target_[n3d_target_depth].float_ = fboffs + depth;
+        state.target_[n3d_target_pixel].uint32_ = fboffs + framebuffer->pixels_;
 
         bin.rasterizer_ = nullptr;
-        bin.texture_ = nullptr;
+        state.texure_ = nullptr;
 
         bin.frame_ = 0;
     }
@@ -108,15 +109,16 @@ void n3d_frame_send_triangle(
     // itterate over all bins
     for (uint32_t i = 0; i < frame->num_bins_; ++i) {
         n3d_bin_t & bin = frame->bin_[i];
+        auto & state = bin.state_;
 
         // reject when triangle cant overlap the bin
-        if (bin.offset_.x > (triangle.max_.x + 1.f))
+        if (state.offset_.x > (triangle.max_.x + 1.f))
             continue;
-        if (bin.offset_.y > (triangle.max_.y + 1.f))
+        if (state.offset_.y > (triangle.max_.y + 1.f))
             continue;
-        if ((bin.offset_.x + bin.width_) < triangle.min_.x)
+        if ((state.offset_.x + state.width_) < triangle.min_.x)
             continue;
-        if ((bin.offset_.y + bin.height_) < triangle.min_.y)
+        if ((state.offset_.y + state.height_) < triangle.min_.y)
             continue;
 
         // send this triangle to the bin

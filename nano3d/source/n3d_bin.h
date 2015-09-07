@@ -12,7 +12,9 @@ struct n3d_command_t {
         cmd_rasterizer  ,
         cmd_texture     ,
         cmd_present     ,
-        cmd_clear
+        cmd_clear       ,
+        // custom user data to be passed to the rasterizer
+        cmd_user        ,
     }
     command_;
 
@@ -35,9 +37,11 @@ struct n3d_bin_t {
     n3d_bin_t()
         : pipe_()
         , rasterizer_(nullptr)
+#if 0
         , texture_(nullptr)
         , color_(nullptr)
         , depth_(nullptr)
+#endif
         , counter_(nullptr)
     {
     }
@@ -50,14 +54,17 @@ struct n3d_bin_t {
 
     // pipeline state
     const n3d_rasterizer_t * rasterizer_;
+#if 0
     const n3d_texture_t    * texture_;
 
     // bin offset from [0,0]
     vec2f_t   offset_;
+#endif
 
     //(todo) move to this instead?
     n3d_rasterizer_t::state_t state_;
 
+#if 0
     // render targets
     uint32_t *color_;
     float    *depth_;
@@ -66,6 +73,7 @@ struct n3d_bin_t {
     // bin size
     uint32_t  width_;
     uint32_t  height_;
+#endif
 
     // the current frame number
     uint32_t frame_;

@@ -118,13 +118,20 @@ struct n3d_rasterizer_t {
 
     // user data passed to the rasterizer
     void *user_;
-    
+
+    // per vertex pre processing
+    void (*vertex_proc_)(vec3f_t & pos,
+                         vec2f_t & uv,
+                         vec4f_t & rgba);
+
+    // per triangle pre processing
     void (*triangle_proc_)(vec3f_t pos[3],
                            vec2f_t uv[3],
                            vec4f_t rgba[3],
                            scratch_t & scratch,
                            void * user);
 
+    // triangle rasterizer
     void (*raster_proc_)(const state_t & state,
                          const triangle_t & triangle,
                          const scratch_t & scratch,
