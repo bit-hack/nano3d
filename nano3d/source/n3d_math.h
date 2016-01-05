@@ -33,6 +33,7 @@ void n3d_transform (
 namespace {
 
     static const float n3d_pi = 3.14159265359f;
+    static const float n3d_pi2 = n3d_pi * 2.f;
 
     template <typename type_t>
     vec2_t<type_t> vec2(const type_t x, const type_t y) {

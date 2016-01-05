@@ -59,7 +59,8 @@ uint32_t clip_near( const vec4f_t & v0,
 bool is_backfacing(const vec4f_t & a, const vec4f_t & b, const vec4f_t & c) {
 
     // test z componant of cross product
-    return ((c.x - a.x)*(c.y - b.y) - (c.x - b.x)*(c.y - a.y)) > 0.f;
+    const float cross = ((c.x - a.x)*(c.y - b.y) - (c.x - b.x)*(c.y - a.y));
+    return ((*(uint32_t*)&cross) & 0x80000000) == 0;
 }
 
 } // namespace {}
@@ -78,11 +79,16 @@ void n3d_transform(n3d_vertex_t * v, const uint32_t num_verts, const mat4f_t & m
 // we can also reject triangles that are fully outside the frustum too.
 void n3d_clip(n3d_vertex_t v[4], uint32_t & num_verts) {
 
+#if 0
+    //NOTE: this check here has some precision problems and doesnt 1:1 match
+    //      the barycentryic area check made later which leads to cracks.
+
     // we can reject back faces here
     if (is_backfacing(v[0].p_, v[1].p_, v[2].p_)) {
         num_verts = 0;
         return;
     }
+#endif
 
     // incremented when a frustum plane rejects a point
     uint32_t lx = 0, gx = 0;

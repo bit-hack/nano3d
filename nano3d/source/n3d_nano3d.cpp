@@ -115,14 +115,14 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices,
         return n3d_fail;
 
     for (uint32_t i = 0; i < num_indices; i += 3) {
-        //(todo) Doin steps instead of serial pipeline.
+        //(todo) Do in steps instead of serial pipeline.
         //      1. Transform all pending vertices we can.
         //      2. Clip all triangles.
         //      3. Etc.
 
         const uint32_t i0 = indices[i + 0];
-        const uint32_t i1 = indices[i + 1];
-        const uint32_t i2 = indices[i + 2];
+        const uint32_t i1 = indices[i + 2];
+        const uint32_t i2 = indices[i + 1];
 
         vec2f_t uv = vec2(0.f, 0.f);
         vec4f_t rgba = vec4(1.f, 1.f, 1.f, 1.f);

@@ -31,7 +31,7 @@ struct n3d_command_t {
     };
 };
 
-typedef n3d_pipe_t<n3d_command_t, 1024> n3d_command_pipe_t;
+typedef n3d_pipe_t<n3d_command_t, 1024*256> n3d_command_pipe_t;
 
 struct n3d_bin_t {
 
