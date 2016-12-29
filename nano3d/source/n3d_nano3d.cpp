@@ -4,7 +4,7 @@
 #include "n3d_pipeline.h"
 #include "n3d_math.h"
 #include "n3d_bin.h"
-#include "n3d_bin_man.h"
+#include "n3d_schedule.h"
 #include "n3d_frame.h"
 
 struct nano3d_t::detail_t {
@@ -23,9 +23,7 @@ struct nano3d_t::detail_t {
     mat4f_t               matrix_[2];
 
     n3d_frame_t           frame_;
-    n3d_bin_man_t         bin_man_;
-
-    n3d_atomic_t          work_pending_;
+    n3d_schedule_t        schedule_;
 };
 
 nano3d_t::nano3d_t()
@@ -47,12 +45,16 @@ n3d_result_e nano3d_t::start(
     nano3d_t::detail_t  & d_ = *checked(detail_);
     d_.framebuffer_ = *f;
 
+    // create a frame buffer and all associated bins
     if (!n3d_frame_create(&d_.frame_, f))
         return n3d_fail;
 
     // add the bins to the bin manager
-    for (uint32_t i=0; i<d_.frame_.num_bins_; ++i) {
-        d_.bin_man_.add(d_.frame_.bin_ + i, nullptr);
+    d_.schedule_.add(d_.frame_.bin_, d_.frame_.num_bins_);
+
+    // start the worker threads
+    if (!d_.schedule_.start(num_threads)) {
+        return n3d_fail;
     }
 
     return n3d_sucess;
@@ -60,9 +62,8 @@ n3d_result_e nano3d_t::start(
 
 n3d_result_e nano3d_t::stop() {
 
-//    nano3d_t::detail_t  & d_ = *checked(detail_);
-
-    //(todo) send kill signal to worker threads, join
+    nano3d_t::detail_t  & d_ = *checked(detail_);
+    d_.schedule_.stop();
     return n3d_sucess;
 }
 
@@ -108,14 +109,16 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices,
     nano3d_t::detail_t  & d_ = *checked(detail_);
     n3d_vertex_buffer_t & vb = d_.vertex_buffer_;
 
+    // space for 4 vertices since one more may be generated when clipping.
     n3d_vertex_t v[4];
 
+    // indices should be multiple of 3 (triangle).
     n3d_assert((num_indices % 3) == 0);
     if (num_indices % 3)
         return n3d_fail;
 
     for (uint32_t i = 0; i < num_indices; i += 3) {
-        //(todo) Do in steps instead of serial pipeline.
+        //(todo) Batch transform instead of serial.
         //      1. Transform all pending vertices we can.
         //      2. Clip all triangles.
         //      3. Etc.
@@ -180,16 +183,20 @@ n3d_result_e nano3d_t::present() {
 
     // ask the bin manager for work to do
     n3d_bin_t * bin = nullptr;
-    while (!d_.bin_man_.frame_is_done()) {
+    while (!d_.schedule_.frame_is_done()) {
 
-        if ((bin = d_.bin_man_.get_work(nullptr)))
+        // if we are waiting then we can pitch in too
+        if ((bin = d_.schedule_.get_work(nullptr))) {
             n3d_bin_process(bin);
-        else
+        }
+        else {
             n3d_yield();
+        }
     }
 
-    d_.bin_man_.next_frame();
-
+    // move on to the next frame
+    d_.schedule_.next_frame();
+    
     return n3d_sucess;
 }
 
@@ -219,4 +226,3 @@ n3d_result_e nano3d_t::n3d_unproject(const uint32_t num,
     //todo: implement
     return n3d_result_e::n3d_fail;
 }
-

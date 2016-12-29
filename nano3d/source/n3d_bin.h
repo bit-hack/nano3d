@@ -7,6 +7,9 @@
 
 struct n3d_command_t {
 
+    // note: this is currently 172 bytes
+    //       172 bytes * ~70 bins * 1024 pipe = ~11mb
+
     enum {
         cmd_triangle    ,
         cmd_rasterizer  ,
@@ -31,7 +34,10 @@ struct n3d_command_t {
     };
 };
 
-typedef n3d_pipe_t<n3d_command_t, 1024*256> n3d_command_pipe_t;
+const uint32_t n3d_command_size = sizeof(n3d_command_t);
+
+
+typedef n3d_pipe_t<n3d_command_t, 1024> n3d_command_pipe_t;
 
 struct n3d_bin_t {
 
@@ -47,7 +53,7 @@ struct n3d_bin_t {
         state_.texure_ = nullptr;
     }
 
-    // locked when a thread is processing a bin
+    // locked when a thread is currently processing a bin
     n3d_spinlock_t lock_;
 
     // command pipe
@@ -55,15 +61,17 @@ struct n3d_bin_t {
 
     // pipeline state
     const n3d_rasterizer_t * rasterizer_;
-
-    //(todo) move to this instead?
     n3d_rasterizer_t::state_t state_;
 
     // the current frame number
-    uint32_t frame_;
+    n3d_atomic_t frame_;
 
-    // 
+    // this counter is shared amongst all bins and tracks the number which are
+    // still to present for this frame.  it is decremented when this bin
+    // presents.
     n3d_atomic_t * counter_;
+
+    uint16_t id_;
 };
 
 // process all work pending for a bin

@@ -1,6 +1,14 @@
 #include "n3d_decl.h"
 #include "n3d_forward.h"
 
+// the n3d_pipeline is responsible for transforming vertices threw each stage
+// of the geometry pipeline:
+// - world space transform
+// - projection to homogeneous clip space
+// - near plane clipping
+// - perspective division
+// - normalised device coordinates to frame buffer mapping
+
 // transform vertex
 void n3d_transform(
     n3d_vertex_t * v, 

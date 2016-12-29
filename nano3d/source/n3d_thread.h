@@ -30,30 +30,36 @@ protected:
 };
 
 struct n3d_spinlock_t {
-    
+
     n3d_atomic_t atom_;
 
+    static const long c_unlocked = 0;
+    static const long c_locked   = 1;
+
     n3d_spinlock_t()
-        : atom_(0)
+        : atom_(c_unlocked)
     {
     }
 
     ~n3d_spinlock_t()
     {
-        n3d_assert(atom_ == 0);
+        n3d_assert(atom_ == c_unlocked);
     }
 
     bool try_lock() {
-        return n3d_atomic_xchg(atom_, 1) == 0;
+        return n3d_atomic_xchg(atom_, c_locked) == c_unlocked;
     }
 
     void lock() {
-        while (!try_lock())
+        while (!try_lock()) {
             n3d_yield();
+        }
+        n3d_assert(atom_ == c_locked);
     }
 
     void unlock() {
-        atom_ = 0;
+        n3d_assert(atom_ == c_locked);
+        atom_ = c_unlocked;
     }
 };
 

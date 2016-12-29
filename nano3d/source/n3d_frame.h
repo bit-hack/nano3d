@@ -4,6 +4,11 @@
 #include "n3d_types.h"
 #include "n3d_thread.h"
 
+// a n3d_frame_t manages the nano3d frame buffer and all of the bins that are
+// produced from its subdivision. the frame system is also responsible for
+// relaying commands from the frontend interface to the individual bin command
+// queues.
+
 struct n3d_frame_t {
 
     uint32_t num_bins_;
@@ -44,4 +49,4 @@ void n3d_frame_clear(
     const float z);
 
 void n3d_frame_present(
-    n3d_frame_t * frame);
+    n3d_frame_t *   frame);

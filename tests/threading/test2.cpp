@@ -18,11 +18,11 @@ namespace {
         return i.count();
     }
 
-    struct my_thread_2_t : public n3d_thread_t {
+    struct my_thread_t : public n3d_thread_t {
 
-        n3d_pipe_t<uint64_t, 1024> pipe_;
+        n3d_pipe_t<uint64_t, 256> pipe_;
 
-        my_thread_2_t()
+        my_thread_t()
             : n3d_thread_t()
             , pipe_()
         {
@@ -31,7 +31,6 @@ namespace {
         virtual void thread_func() {
 
             uint64_t rng = seed() | 1;
-
             uint64_t last = -1;
 
             for (uint64_t i = 0; is_active(); ++i) {
@@ -57,12 +56,14 @@ namespace {
 
 bool test2() {
 
-    my_thread_2_t thread;
+    static const uint32_t itterations = 1000000;
+
+    my_thread_t thread;
     thread.start();
 
     uint64_t rng = seed() | 1;
 
-    for (uint64_t i = 0; i < 1000000; ) {
+    for (uint64_t i = 0; i < itterations;) {
 
         if ((i & 0xffff) == (rng & 0xffff)) {
             std::this_thread::sleep_for(std::chrono::microseconds(rng & 0xff));

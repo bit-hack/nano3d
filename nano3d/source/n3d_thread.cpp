@@ -55,7 +55,9 @@ void n3d_thread_t::stop() {
 
 void n3d_thread_t::trampoline(n3d_thread_t * self) {
     n3d_assert(self);
-    self->thread_func();
+    while (self->is_active()) {
+        self->thread_func();
+    }
 }
 
 void n3d_thread_t::thread_func() {
@@ -72,4 +74,9 @@ bool n3d_thread_t::is_active() const {
 
 void n3d_yield() {
     std::this_thread::yield();
+}
+
+uint32_t n3d_thread_t::get_id() const {
+    detail_t & d_ = *checked(detail_);
+    return d_.id_;
 }

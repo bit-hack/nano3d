@@ -11,15 +11,15 @@ namespace {
 #if defined(_MSC_VER)
 
     long n3d_atomic_inc(n3d_atomic_t &v) {
-        return _InterlockedIncrement (&v);
+        return _InterlockedIncrement(&v);
     }
 
     long n3d_atomic_dec(n3d_atomic_t &v) {
-        return _InterlockedDecrement (&v);
+        return _InterlockedDecrement(&v);
     }
 
     long n3d_atomic_xchg(n3d_atomic_t &v, long x) {
-        return _InterlockedExchange (&v, x);
+        return _InterlockedExchange(&v, x);
     }
 
 #else

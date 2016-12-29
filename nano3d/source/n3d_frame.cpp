@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "n3d_frame.h"
 #include "n3d_bin.h"
 
@@ -8,8 +10,16 @@ namespace {
                   n3d_command_t & cmd) {
 
         n3d_assert(bin);
-        while (!bin->pipe_.push(cmd))
+        while (!bin->pipe_.push(cmd)) {
+           
+            //todo: at this stage we could switch to the bin and give it some
+            //      execution time until the bin is empty again or less full.
+
+            //note: if there is no other thread to consume commands then at
+            //      this stage we will deadlock.
+
             n3d_yield();
+        }
     }
 
     // send a message to all bins
@@ -34,7 +44,9 @@ bool n3d_frame_create(n3d_frame_t * frame,
     const uint32_t fb_width = framebuffer->width_;
     const uint32_t fb_height = framebuffer->height_;
 
-    //(todo) dont simply round down and crop
+    //todo: dont simply round down and crop since we will get inactive borders
+    //      around the framebuffer.
+
     int bx = fb_width / bin_w;
     int by = fb_height / bin_h;
     int nbins = bx * by;
@@ -54,6 +66,9 @@ bool n3d_frame_create(n3d_frame_t * frame,
 
         n3d_bin_t & bin = frame->bin_[i];
         auto & state = bin.state_;
+
+        // set bin id
+        bin.id_ = i;
 
         // frame buffer dimensions
         state.width_  = bin_w;
@@ -98,9 +113,8 @@ void n3d_frame_free(n3d_frame_t * frame) {
     frame->bin_ = nullptr;
 }
 
-void n3d_frame_send_triangle(
-    n3d_frame_t * frame,
-    n3d_rasterizer_t::triangle_t & triangle) {
+void n3d_frame_send_triangle(n3d_frame_t * frame,
+                             n3d_rasterizer_t::triangle_t & triangle) {
 
     n3d_assert(frame);
 
@@ -108,9 +122,9 @@ void n3d_frame_send_triangle(
     cmd.command_ = cmd.cmd_triangle;
     cmd.triangle_ = triangle;
 
-    //(note) if we are pushing commands into a command queue we need to be
-    //       sure that there is some way to consume those commands in case
-    //       that the queue is full, as we would block forever.
+    //note: if we are pushing commands into a command queue we need to be sure
+    //      that there is some way to consume those commands in case that the
+    //      queue is full, as we would block forever.
 
     // iterate over all bins
     for (uint32_t i = 0; i < frame->num_bins_; ++i) {

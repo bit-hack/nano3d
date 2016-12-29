@@ -165,7 +165,7 @@ struct nano3d_t {
     ~nano3d_t();
 
     // description:
-    //      initalize an n3d rendering context.  this must be called before
+    //      initialize an n3d rendering context. this must be called before
     //      any other functions.
     //
     // inputs:

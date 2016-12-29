@@ -11,7 +11,7 @@ struct n3d_thread_t;
 
 struct n3d_command_t;
 struct n3d_bin_t;
-struct n3d_bin_man_t;
+struct n3d_schedule_t;
 
 struct n3d_triangle_stack_t;
 struct n3d_frame_t;

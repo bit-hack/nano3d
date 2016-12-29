@@ -107,8 +107,8 @@ struct app_t {
 
         while (tick()) {
 
-            float st = sin(delta);
-            float ct =-cos(delta);
+            float st = sinf(delta);
+            float ct =-cosf(delta);
 
             float d =-1.5f;
 

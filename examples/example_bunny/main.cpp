@@ -19,9 +19,10 @@ struct app_t {
 
     bool init() {
 
-        const uint32_t c_width  = 512;
-        const uint32_t c_height = 512;
-        const float    c_aspect = float(c_width)/float(c_height);
+        const uint32_t c_threads = 3;
+        const uint32_t c_width   = 512;
+        const uint32_t c_height  = 512;
+        const float    c_aspect  = float(c_width)/float(c_height);
 
         // create SDL window
         if (SDL_Init(SDL_INIT_VIDEO))
@@ -37,7 +38,7 @@ struct app_t {
             c_height,
             (uint32_t*)screen_->pixels
         };
-        n3d_.start(&framebuffer, 0, 1);
+        n3d_.start(&framebuffer, 0, c_threads);
 
         // bind the vertex buffer
         n3d_vertex_buffer_t vb = {

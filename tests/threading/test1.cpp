@@ -2,11 +2,11 @@
 
 namespace {
 
-    struct my_thread_1_t : public n3d_thread_t {
+    struct my_thread_t : public n3d_thread_t {
 
         uint64_t val_;
 
-        my_thread_1_t()
+        my_thread_t()
             : n3d_thread_t()
             , val_(0)
         {
@@ -23,7 +23,7 @@ namespace {
 
 bool test1() {
 
-    my_thread_1_t thread;
+    my_thread_t thread;
 
     thread.start();
 
