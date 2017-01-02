@@ -6,47 +6,51 @@
 
 namespace {
 
-    // vertex position
-    vec3f_t p[] = {
+template <typename type_t, size_t size>
+static constexpr size_t array_length(const type_t (&array)[size])
+{
+    return size;
+}
 
-        { 0.f,-1.f,-2.f },
-        { 1.f, 1.f,-2.f },
-        {-1.f, 1.f,-2.f },
+// vertex position
+vec3f_t p[] = {
+    { 0.f, -1.f, -2.f },
+    { 1.f, 1.f, -2.f },
+    { -1.f, 1.f, -2.f },
+    { 1.f, -1.f, -3.f },
+    { 2.f, 1.f, -3.f },
+    { 0.f, 1.f, -3.f },
+};
 
-        { 1.f,-1.f,-3.f },
-        { 2.f, 1.f,-3.f },
-        { 0.f, 1.f,-3.f },
-    };
+// vertex colour
+vec4f_t c[] = {
+    { 1.f, 0.f, 0.f, 1.f },
+    { 0.f, 1.f, 0.f, 1.f },
+    { 0.f, 0.f, 1.f, 1.f },
 
-    // vertex colour
-    vec4f_t c[] = {
+    { 1.f, 0.f, 0.f, 1.f },
+    { 0.f, 1.f, 0.f, 1.f },
+    { 0.f, 0.f, 1.f, 1.f },
+};
 
-        { 1.f, 0.f, 0.f, 1.f },
-        { 0.f, 1.f, 0.f, 1.f },
-        { 0.f, 0.f, 1.f, 1.f },
-
-        { 1.f, 0.f, 0.f, 1.f },
-        { 0.f, 1.f, 0.f, 1.f },
-        { 0.f, 0.f, 1.f, 1.f },
-    };
-
-    // index buffer
-    uint32_t ix[] = {
-
-        0, 2, 1,
-        3, 5, 4,
-    };
+// index buffer
+uint32_t ix[] = {
+    0, 2, 1,
+    3, 5, 4,
+};
 
 } // namespace {}
 
 struct app_t {
 
-    SDL_Surface * screen_;
+    SDL_Surface* screen_;
     nano3d_t n3d_;
-    n3d_rasterizer_t * rast_;
 
-    bool init() {
+    n3d_rasterizer_t* rast_;
+    n3d_vertex_buffer_t * buffer_;
 
+    bool init()
+    {
         // start up SDL
         if (SDL_Init(SDL_INIT_VIDEO))
             return false;
@@ -60,16 +64,16 @@ struct app_t {
             512,
             (uint32_t*)screen_->pixels
         };
-        n3d_.start(&framebuffer, 0, 1);
+        n3d_.start(&framebuffer, 0, 0);
 
         // bind the vertex buffer
-        n3d_vertex_buffer_t vb = {
-            3,
+        buffer_ = new n3d_vertex_buffer_t{
+            array_length(p),
             p,
             nullptr,
             c
         };
-        n3d_.bind(&vb);
+        n3d_.bind(buffer_);
 
         // create a rasterizer and bind it
         rast_ = n3d_rasterizer_new(n3d_raster_reference);
@@ -83,16 +87,16 @@ struct app_t {
         return true;
     }
 
-    bool stop() {
-
+    bool stop()
+    {
         n3d_.stop();
         n3d_rasterizer_delete(rast_);
         SDL_Quit();
         return true;
     }
 
-    bool tick() {
-
+    bool tick()
+    {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
 
@@ -102,14 +106,14 @@ struct app_t {
         return true;
     }
 
-    bool main() {
-
+    bool main()
+    {
         while (tick()) {
 
             SDL_FillRect(screen_, nullptr, 0x101010);
 
             // draw 6 elements from the index buffer
-            n3d_.draw(6, ix);
+            n3d_.draw(array_length(ix), ix);
 
             // copy nano3d state to framebuffer
             n3d_.present();
@@ -121,15 +125,12 @@ struct app_t {
     }
 };
 
-int main(int argc, char ** args) {
-
+int main(int argc, char** args)
+{
     app_t app;
-
     if (!app.init())
         return -1;
-
     app.main();
     app.stop();
-
     return 0;
 }

@@ -1,29 +1,40 @@
+// n3d_nano3dcpp
+//   implement the nano3d api
+
+#include <array>
+
 #include "../nano3d.h"
-#include "n3d_util.h"
-#include "n3d_triangle.h"
-#include "n3d_pipeline.h"
-#include "n3d_math.h"
 #include "n3d_bin.h"
-#include "n3d_schedule.h"
 #include "n3d_frame.h"
+#include "n3d_math.h"
+#include "n3d_pipeline.h"
+#include "n3d_schedule.h"
+#include "n3d_triangle.h"
+#include "n3d_util.h"
 
 struct nano3d_t::detail_t {
 
     detail_t()
         : vertex_buffer_()
-        , framebuffer_  ()
+        , framebuffer_()
     {
         n3d_identity(matrix_[n3d_model_view]);
         n3d_identity(matrix_[n3d_projection]);
     }
 
-    n3d_vertex_buffer_t   vertex_buffer_;
+    n3d_vertex_buffer_t vertex_buffer_;
 
-    n3d_framebuffer_t     framebuffer_;
-    mat4f_t               matrix_[2];
+    n3d_framebuffer_t framebuffer_;
+    std::array<mat4f_t, 2> matrix_;
 
-    n3d_frame_t           frame_;
-    n3d_schedule_t        schedule_;
+    n3d_frame_t frame_;
+    n3d_schedule_t schedule_;
+
+    struct {
+        valid_t<n3d_rasterizer_t> rasterizer_;
+        valid_t<n3d_texture_t> texture_;
+        valid_t<n3d_vertex_buffer_t> buffer_;
+    } state_;
 };
 
 nano3d_t::nano3d_t()
@@ -32,17 +43,18 @@ nano3d_t::nano3d_t()
     n3d_assert(detail_);
 }
 
-nano3d_t::~nano3d_t() {
+nano3d_t::~nano3d_t()
+{
     n3d_assert(detail_);
     delete detail_;
 }
 
 n3d_result_e nano3d_t::start(
-        const n3d_framebuffer_t *f,
-        const uint32_t num_planes,
-        const uint32_t num_threads) {
-
-    nano3d_t::detail_t  & d_ = *checked(detail_);
+    const n3d_framebuffer_t* f,
+    const uint32_t num_planes,
+    const uint32_t num_threads)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
     d_.framebuffer_ = *f;
 
     // create a frame buffer and all associated bins
@@ -50,7 +62,9 @@ n3d_result_e nano3d_t::start(
         return n3d_fail;
 
     // add the bins to the bin manager
-    d_.schedule_.add(d_.frame_.bin_, d_.frame_.num_bins_);
+    for (std::unique_ptr<n3d_bin_t>& bin : d_.frame_.bin_) {
+        d_.schedule_.add(bin.get(), 1);
+    }
 
     // start the worker threads
     if (!d_.schedule_.start(num_threads)) {
@@ -60,54 +74,69 @@ n3d_result_e nano3d_t::start(
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::stop() {
-
-    nano3d_t::detail_t  & d_ = *checked(detail_);
+n3d_result_e nano3d_t::stop()
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
     d_.schedule_.stop();
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(const n3d_vertex_buffer_t *in) {
-
-    nano3d_t::detail_t  & d_ = *checked(detail_);
+n3d_result_e nano3d_t::bind(
+    const n3d_vertex_buffer_t* in)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
+    d_.state_.buffer_ = *in;
     d_.vertex_buffer_ = *in;
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(const n3d_rasterizer_t *in) {
+n3d_result_e nano3d_t::bind(
+    const n3d_rasterizer_t* in)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
+    d_.state_.rasterizer_ = *in;
 
-    nano3d_t::detail_t  & d_ = *checked(detail_);
+    // todo: what happens when the n3d_rasterizer_t goes out of scope
+
     n3d_frame_send_rasterizer(&d_.frame_, in);
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(const n3d_texture_t *in) {
+n3d_result_e nano3d_t::bind(
+    const n3d_texture_t* in)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
+    d_.state_.texture_ = *in;
 
-    nano3d_t::detail_t  & d_ = *checked(detail_);
+    // todo: need to create a local copy and do some reference counting here
+
     n3d_frame_send_texture(&d_.frame_, in);
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(const mat4f_t *in,
-                            const n3d_matrix_e slot) {
-
-    nano3d_t::detail_t  & d_ = *checked(detail_);
+n3d_result_e nano3d_t::bind(
+    const mat4f_t* in,
+    const n3d_matrix_e slot)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
     d_.matrix_[slot] = *in;
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::bind(const n3d_user_data_t * in) {
-
-    nano3d_t::detail_t & d_ = *checked(detail_);
+n3d_result_e nano3d_t::bind(
+    const n3d_user_data_t* in)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
     n3d_frame_send_user_data(&d_.frame_, in);
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::draw(const uint32_t num_indices,
-                            const uint32_t * indices) {
-
-    nano3d_t::detail_t  & d_ = *checked(detail_);
-    n3d_vertex_buffer_t & vb = d_.vertex_buffer_;
+n3d_result_e nano3d_t::draw(
+    const uint32_t num_indices,
+    const uint32_t* indices)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
+    n3d_vertex_buffer_t& vb = d_.vertex_buffer_;
 
     // space for 4 vertices since one more may be generated when clipping.
     n3d_vertex_t v[4];
@@ -154,75 +183,81 @@ n3d_result_e nano3d_t::draw(const uint32_t num_indices,
         n3d_w_divide(v, num);
 
         // transform from ndc to screen space
-        vec2f_t sf = { float(d_.framebuffer_.width_), 
-                       float(d_.framebuffer_.height_) };
+        vec2f_t sf = { float(d_.framebuffer_.width_),
+            float(d_.framebuffer_.height_) };
         n3d_ndc_to_dc(v, num, sf);
+
+        const int prep_flags = 
+            e_prepare_depth |
+            ((d_.state_.buffer_ && d_.state_.buffer_.get()->uv_) ? e_prepare_uv : 0) |
+            ((d_.state_.buffer_ && d_.state_.buffer_.get()->rgba_) ? e_prepare_rgb : 0);
 
         // feed triangles to bins
         n3d_assert(num == 3 || num == 4);
         for (uint32_t i = 2; i < num; ++i) {
             n3d_rasterizer_t::triangle_t tri;
-            if (!n3d_prepare(tri, v[0], v[i], v[i-1]))
+            if (!n3d_prepare(tri, v[0], v[i], v[i - 1], prep_flags))
                 continue;
             // send this triangle off for upload to the bins
             n3d_frame_send_triangle(&d_.frame_, tri);
         }
-        
     }
 
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::present() {
-
-    nano3d_t::detail_t & d_ = *checked(detail_);
-    n3d_frame_t & frame = d_.frame_;
+n3d_result_e nano3d_t::present()
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
+    n3d_frame_t& frame = d_.frame_;
 
     // send the present command
     n3d_frame_present(&frame);
 
     // ask the bin manager for work to do
-    n3d_bin_t * bin = nullptr;
+    n3d_bin_t* bin = nullptr;
     while (!d_.schedule_.frame_is_done()) {
 
         // if we are waiting then we can pitch in too
         if ((bin = d_.schedule_.get_work(nullptr))) {
             n3d_bin_process(bin);
-        }
-        else {
+        } else {
             n3d_yield();
         }
     }
 
     // move on to the next frame
     d_.schedule_.next_frame();
-    
+
     return n3d_sucess;
 }
 
-n3d_result_e nano3d_t::clear(const uint32_t rgba,
-                             const float depth) {
-
-    nano3d_t::detail_t & d_ = *checked(detail_);
-    n3d_frame_t & frame = d_.frame_;
+n3d_result_e nano3d_t::clear(
+    const uint32_t rgba,
+    const float depth)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
+    n3d_frame_t& frame = d_.frame_;
     n3d_frame_clear(&frame, rgba, depth);
     return n3d_result_e::n3d_sucess;
 }
 
-n3d_result_e nano3d_t::n3d_project(const uint32_t num,
-                                   const vec4f_t * in,
-                                   vec4f_t * out) {
-
-    nano3d_t::detail_t & d_ = *checked(detail_);
-    n3d_transform (num, d_.matrix_[n3d_matrix_e::n3d_model_view], in, out );
+n3d_result_e nano3d_t::project(
+    const uint32_t num,
+    const vec4f_t* in,
+    vec4f_t* out)
+{
+    nano3d_t::detail_t& d_ = *checked(detail_);
+    n3d_transform(num, d_.matrix_[n3d_matrix_e::n3d_model_view], in, out);
     return n3d_result_e::n3d_sucess;
 }
 
-n3d_result_e nano3d_t::n3d_unproject(const uint32_t num,
-                                     const vec2f_t * in,
-                                     vec3f_t * dir,
-                                     vec3f_t * origin) {
-
+n3d_result_e nano3d_t::unproject(
+    const uint32_t num,
+    const vec2f_t* in,
+    vec3f_t* dir,
+    vec3f_t* origin)
+{
     //todo: implement
     return n3d_result_e::n3d_fail;
 }

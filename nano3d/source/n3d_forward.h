@@ -17,4 +17,3 @@ struct n3d_triangle_stack_t;
 struct n3d_frame_t;
 
 struct n3d_vertex_t;
-

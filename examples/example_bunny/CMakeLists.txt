@@ -5,3 +5,7 @@ include_directories(${SDL_INCLUDE_DIR})
 
 add_executable(example_bunny ${SOURCE_FILES} ${HEADER_FILES})
 target_link_libraries(example_bunny LINK_PUBLIC nano3d nano3d_ex ${SDL_LIBRARY})
+
+set_target_properties(example_bunny PROPERTIES
+    FOLDER examples
+)

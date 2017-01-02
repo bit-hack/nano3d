@@ -209,6 +209,8 @@ struct nano3d_t {
 
     // description:
     //      bind a texture to the n3d pipeline.
+    //      the bound structure must remain valid until the next call to
+    //      n3d_swap().
     //
     // inputs:
     //      texture     - texture to bind to pipeline
@@ -255,9 +257,9 @@ struct nano3d_t {
     //      num         - number of points to project
     //      input       - input world space point
     //      output      - output screen space point
-    n3d_result_e n3d_project(const uint32_t num,
-                             const vec4f_t * in,
-                             vec4f_t * out);
+    n3d_result_e project(const uint32_t num,
+                         const vec4f_t * in,
+                         vec4f_t * out);
 
     // description:
     //      project a point from screen space to world space.
@@ -267,10 +269,10 @@ struct nano3d_t {
     //      in          - input screen space points
     //      dir         - output direction vector from origin
     //      origin      - world space camera position
-    n3d_result_e n3d_unproject(const uint32_t num,
-                               const vec2f_t * in,
-                               vec3f_t * dir,
-                               vec3f_t * origin);
+    n3d_result_e unproject(const uint32_t num,
+                           const vec2f_t * in,
+                           vec3f_t * dir,
+                           vec3f_t * origin);
 
 protected:
 

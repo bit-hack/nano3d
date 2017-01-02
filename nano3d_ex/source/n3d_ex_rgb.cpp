@@ -24,7 +24,7 @@ uint32_t rgb(float r, float g, float b, float a)
 
 } // namespace {}
 
-void n3d_raster_depth_raster(
+void n3d_raster_rgb_raster(
     const n3d_rasterizer_t::state_t& s,
     const n3d_rasterizer_t::triangle_t& t,
     void* user)
@@ -41,6 +41,14 @@ void n3d_raster_depth_raster(
     bc_vy += bc_sx * s.offset_.x;
     bc_vy += bc_sy * s.offset_.y;
 
+    // colour interpolants
+    vec4f_t cl_vy = { t.r_.v_, t.g_.v_, t.b_.v_, t.a_.v_ };
+    const vec4f_t cl_sx = { t.r_.sx_, t.g_.sx_, t.b_.sx_, t.a_.sx_ };
+    const vec4f_t cl_sy = { t.r_.sy_, t.g_.sy_, t.b_.sy_, t.a_.sy_ };
+    // shift to offset
+    cl_vy += cl_sx * s.offset_.x;
+    cl_vy += cl_sy * s.offset_.y;
+
     // 1/w interpolants
     float w_vy = t.w_.v_;
     const float w_sx = t.w_.sx_;
@@ -56,6 +64,7 @@ void n3d_raster_depth_raster(
     for (uint32_t y = 0; y < height; ++y) {
 
         vec3f_t bc_vx = bc_vy;
+        vec4f_t cl_vx = cl_vy;
         float w_vx = w_vy;
 
         // x axis
@@ -67,9 +76,14 @@ void n3d_raster_depth_raster(
                 // depth test (w buffering)
                 if (w_vx > depth[x]) {
 
+                    // find fragment colour
+                    const float r = cl_vx.x / w_vx;
+                    const float g = cl_vx.y / w_vx;
+                    const float b = cl_vx.z / w_vx;
+                    const float a = cl_vx.w / w_vx;
+
                     // update colour buffer
-                    const float c = w_vx * 100.f;
-                    dst[x] = rgb(c, c, c, c);
+                    dst[x] = rgb(r, g, b, a);
 
                     // update (w) depth buffer
                     depth[x] = w_vx;
@@ -78,12 +92,14 @@ void n3d_raster_depth_raster(
 
             // step on x axis
             bc_vx += bc_sx;
+            cl_vx += cl_sx;
             w_vx += w_sx;
 
         } // for (x axis)
 
         // step on y axis
         bc_vy += bc_sy;
+        cl_vy += cl_sy;
         w_vy += w_sy;
 
         // step the buffers

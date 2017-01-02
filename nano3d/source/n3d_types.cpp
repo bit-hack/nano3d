@@ -11,12 +11,14 @@ struct n3d_triangle_stack {
     triangle_t triangle_[size_];
     uint32_t head_;
 
-    triangle_t * next() {
+    triangle_t* next()
+    {
         n3d_assert(head_ < size_);
         return triangle_ + head_++;
     }
 
-    void clear() {
+    void clear()
+    {
         head_ = 0;
     }
 };

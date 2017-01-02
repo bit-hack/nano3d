@@ -1,28 +1,28 @@
 #define _SDL_main_h
 #include <SDL.h>
+#include <math.h>
 #include <nano3d.h>
 #include <nano3d_ex.h>
 #include <source/n3d_math.h>
-#include <math.h>
 
-extern const float    obj_vertex[1506];
-extern const uint32_t obj_index [3000];
+extern const float obj_vertex[1506];
+extern const uint32_t obj_index[3000];
 
 extern const uint32_t obj_num_vertex;
 extern const uint32_t obj_num_index;
 
 struct app_t {
 
-    SDL_Surface      * screen_;
-    nano3d_t           n3d_;
-    n3d_rasterizer_t * rast_;
+    SDL_Surface* screen_;
+    nano3d_t n3d_;
+    n3d_rasterizer_t* rast_;
 
-    bool init() {
-
+    bool init()
+    {
         const uint32_t c_threads = 3;
-        const uint32_t c_width   = 512;
-        const uint32_t c_height  = 512;
-        const float    c_aspect  = float(c_width)/float(c_height);
+        const uint32_t c_width = 512;
+        const uint32_t c_height = 512;
+        const float c_aspect = float(c_width) / float(c_height);
 
         // create SDL window
         if (SDL_Init(SDL_INIT_VIDEO))
@@ -61,7 +61,8 @@ struct app_t {
         return true;
     }
 
-    bool stop() {
+    bool stop()
+    {
         // shutdown demo
         n3d_.stop();
         n3d_rasterizer_delete(rast_);
@@ -69,7 +70,8 @@ struct app_t {
         return true;
     }
 
-    bool tick() {
+    bool tick()
+    {
         // SDL message pump
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
@@ -79,13 +81,14 @@ struct app_t {
         return true;
     }
 
-    void inc(float & v, float i) {
+    void inc(float& v, float i)
+    {
         // increment and wrap to [0, PI*2]
         v = (v + i > n3d_pi2) ? v + i - n3d_pi2 : v + i;
     }
 
-    bool main() {
-
+    bool main()
+    {
         float r = 0.f, p = 0.f;
 
         while (tick()) {
@@ -100,7 +103,7 @@ struct app_t {
             // bind a model view matrix
             mat4f_t mvm;
             n3d_rotate(mvm, n3d_pi / 2, 0.f, r);
-            n3d_translate(mvm, vec3(0.f, 40.f, sinf(p)*64-256.f));
+            n3d_translate(mvm, vec3(0.f, 40.f, sinf(p) * 64 - 256.f));
             n3d_.bind(&mvm, n3d_model_view);
 
             // draw the model
@@ -115,8 +118,8 @@ struct app_t {
     }
 };
 
-int main(int argc, char ** args) {
-
+int main(int argc, char** args)
+{
     app_t app;
     if (!app.init())
         return -1;

@@ -1,31 +1,26 @@
 #pragma once
 
+#include "n3d_pipe.h"
+#include "n3d_thread.h"
 #include "n3d_types.h"
 #include "nano3d.h"
-#include "n3d_thread.h"
-#include "n3d_pipe.h"
 
 struct n3d_command_t {
 
-    // note: this is currently 172 bytes
-    //       172 bytes * ~70 bins * 1024 pipe = ~11mb
-
     enum {
-        cmd_triangle    ,
-        cmd_rasterizer  ,
-        cmd_texture     ,
-        cmd_present     ,
-        cmd_clear       ,
+        cmd_triangle,
+        cmd_rasterizer,
+        cmd_texture,
+        cmd_present,
+        cmd_clear,
         // custom user data to be passed to the rasterizer
-        cmd_user_data   ,
-    }
-    command_;
+        cmd_user_data,
+    } command_;
 
-    union
-    {
+    union {
         n3d_rasterizer_t::triangle_t triangle_;
-        const n3d_rasterizer_t * rasterizer_;
-        const n3d_texture_t * texture_;
+        const n3d_rasterizer_t* rasterizer_;
+        const n3d_texture_t* texture_;
         struct {
             uint32_t color_;
             float depth_;
@@ -36,8 +31,10 @@ struct n3d_command_t {
 
 const uint32_t n3d_command_size = sizeof(n3d_command_t);
 
-
 typedef n3d_pipe_t<n3d_command_t, 1024> n3d_command_pipe_t;
+
+// this many kb per bin
+static const size_t _pipe_size_ = sizeof(n3d_command_pipe_t) / 1024;
 
 struct n3d_bin_t {
 
@@ -47,11 +44,15 @@ struct n3d_bin_t {
         , counter_(nullptr)
     {
         state_.target_[n3d_target_pixel].uint32_ = nullptr;
-        state_.target_[n3d_target_depth].float_  = nullptr;
+        state_.target_[n3d_target_depth].float_ = nullptr;
         state_.target_[n3d_target_aux_1].uint32_ = nullptr;
         state_.target_[n3d_target_aux_2].uint32_ = nullptr;
         state_.texure_ = nullptr;
     }
+
+    // no copy
+    n3d_bin_t(const n3d_bin_t&) = delete;
+    n3d_bin_t& operator=(const n3d_bin_t&) = delete;
 
     // locked when a thread is currently processing a bin
     n3d_spinlock_t lock_;
@@ -60,7 +61,7 @@ struct n3d_bin_t {
     n3d_command_pipe_t pipe_;
 
     // pipeline state
-    const n3d_rasterizer_t * rasterizer_;
+    const n3d_rasterizer_t* rasterizer_;
     n3d_rasterizer_t::state_t state_;
 
     // the current frame number
@@ -69,11 +70,11 @@ struct n3d_bin_t {
     // this counter is shared amongst all bins and tracks the number which are
     // still to present for this frame.  it is decremented when this bin
     // presents.
-    n3d_atomic_t * counter_;
+    n3d_atomic_t* counter_;
 
     uint16_t id_;
 };
 
 // process all work pending for a bin
-void n3d_bin_process (
-    n3d_bin_t * bin);
+void n3d_bin_process(
+    n3d_bin_t* bin);

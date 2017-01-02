@@ -1,10 +1,10 @@
 #pragma once
 
-#include <vector>
 #include <memory>
+#include <vector>
 
-#include "n3d_forward.h"
 #include "n3d_atomic.h"
+#include "n3d_forward.h"
 #include "n3d_thread.h"
 
 // the n3d_schedule_t is responsible for managing worker threads and allocating
@@ -19,15 +19,17 @@ struct n3d_schedule_t {
         : bins_()
         , frame_num_(0)
         , counter_(0)
+        , num_bins_(0)
+        , num_threads_(0)
     {
     }
 
     // add a list of bins to the scheduler
-    void add(n3d_bin_t * bin, uint32_t num);
+    void add(n3d_bin_t* bin, uint32_t num);
 
     // return a bin that needs more work.  the thread parameter is a hint for
     // optimization and can be nullptr
-    n3d_bin_t * get_work(n3d_thread_t * thread);
+    n3d_bin_t* get_work(n3d_thread_t* thread);
 
     void next_frame();
 
@@ -39,7 +41,6 @@ struct n3d_schedule_t {
     void stop();
 
 protected:
-
     // reshuffle the bin map
     void reshuffle();
 
@@ -53,6 +54,7 @@ protected:
     n3d_atomic_t frame_num_;
     n3d_atomic_t counter_;
 
+    // todo: replace these with std::vector.size()
     uint32_t num_bins_;
     uint32_t num_threads_;
 };

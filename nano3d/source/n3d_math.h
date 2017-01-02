@@ -6,10 +6,10 @@
 // for optimisation here if these end up getting a lot of use.
 
 void n3d_identity(
-    mat4f_t & m);
+    mat4f_t& m);
 
 void n3d_frustum(
-    mat4f_t & m,
+    mat4f_t& m,
     const float left,
     const float right,
     const float bottom,
@@ -18,118 +18,144 @@ void n3d_frustum(
     const float far);
 
 void n3d_rotate(
-    mat4f_t & m,
+    mat4f_t& m,
     const float a,
     const float b,
     const float c);
 
 void n3d_translate(
-    mat4f_t & m,
-    const vec3f_t & p);
+    mat4f_t& m,
+    const vec3f_t& p);
 
-void n3d_transform (
-    const uint32_t num_verts, 
-    const mat4f_t & m,
-    const vec4f_t * in, 
-          vec4f_t * out);
+void n3d_transform(
+    const uint32_t num_verts,
+    const mat4f_t& m,
+    const vec4f_t* in,
+    vec4f_t* out);
 
 namespace {
 
-    static const float n3d_pi = 3.14159265359f;
-    static const float n3d_pi2 = n3d_pi * 2.f;
+static const float n3d_pi = 3.14159265359f;
+static const float n3d_pi2 = n3d_pi * 2.f;
 
-    template <typename type_t>
-    vec2_t<type_t> vec2(const type_t x,
-                        const type_t y) {
-        vec2_t<type_t> o = { x, y };
-        return o;
-    }
+template <typename type_t>
+vec2_t<type_t> vec2(const type_t x,
+    const type_t y)
+{
+    vec2_t<type_t> o = { x, y };
+    return o;
+}
 
-    template <typename type_t>
-    vec3_t<type_t> vec3(const type_t x,
-                        const type_t y,
-                        const type_t z) {
-        vec3_t<type_t> o = { x, y, z };
-        return o;
-    }
+template <typename type_t>
+vec3_t<type_t> vec3(const type_t x,
+    const type_t y,
+    const type_t z)
+{
+    vec3_t<type_t> o = { x, y, z };
+    return o;
+}
 
-    template <typename type_t>
-    vec3_t<type_t> vec3(const vec4_t<type_t> & v) {
-        const float iw = 1.f / v.w;
-        vec3_t<type_t> o = { v.x * iw, v.y * iw, v.z * iw };
-        return o;
-    }
+template <typename type_t>
+vec3_t<type_t> vec3(const vec4_t<type_t>& v)
+{
+    const float iw = 1.f / v.w;
+    vec3_t<type_t> o = { v.x * iw, v.y * iw, v.z * iw };
+    return o;
+}
 
-    template <typename type_t>
-    vec4_t<type_t> vec4(vec3_t<type_t> & v) {
-        vec4_t<type_t> o = { v.x, v.y, v.z, 1.f };
-        return o;
-    }
+template <typename type_t>
+vec4_t<type_t> vec4(vec3_t<type_t>& v)
+{
+    vec4_t<type_t> o = { v.x, v.y, v.z, 1.f };
+    return o;
+}
 
-    template <typename type_t>
-    vec4_t<type_t> vec4(const type_t x,
-                        const type_t y,
-                        const type_t z,
-                        const type_t w) {
-        vec4_t<type_t> o = { x, y, z, w };
-        return o;
-    }
+template <typename type_t>
+vec4_t<type_t> vec4(
+    const type_t x,
+    const type_t y,
+    const type_t z,
+    const type_t w)
+{
+    vec4_t<type_t> o = { x, y, z, w };
+    return o;
+}
 
-    void operator += (vec3f_t & a,
-                      const vec3f_t & b) {
-        a.x += b.x;
-        a.y += b.y;
-        a.z += b.z;
-    }
+void operator+=(
+    vec3f_t& a,
+    const vec3f_t& b)
+{
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+}
 
-    vec3f_t operator * (const vec3f_t & a,
-                        const float s) {
-        return vec3(a.x*s, a.y*s, a.z*s);
-    }
+vec3f_t operator*(
+    const vec3f_t& a,
+    const float s)
+{
+    return vec3f_t{a.x * s, a.y * s, a.z * s};
+}
 
-    void operator += (vec4f_t & a,
-                      const vec4f_t & b) {
-        a.x += b.x;
-        a.y += b.y;
-        a.z += b.z;
-        a.w += b.w;
-    }
+vec2f_t operator*(
+    const vec2f_t& a,
+    const float s)
+{
+    return vec2f_t{a.x * s, a.y * s};
+}
 
-    vec4f_t operator * (const vec4f_t & a,
-                        const float s) {
-        return vec4(a.x*s, a.y*s, a.z*s, a.w*s);
-    }
+void operator+=(
+    vec2f_t& a,
+    const vec2f_t& b)
+{
+    a.x += b.x;
+    a.y += b.y;
+}
 
-    float n3d_lerp(float k,
-                   const float & a,
-                   const float & b) {
-        return ((1.f - k) * a) + (k * b);
-    }
+void operator+=(vec4f_t& a,
+    const vec4f_t& b)
+{
+    a.x += b.x;
+    a.y += b.y;
+    a.z += b.z;
+    a.w += b.w;
+}
 
-    vec2f_t n3d_lerp(float k,
-                     const vec2f_t & a,
-                     const vec2f_t & b) {
+vec4f_t operator*(const vec4f_t& a,
+    const float s)
+{
+    return vec4(a.x * s, a.y * s, a.z * s, a.w * s);
+}
 
-        //(todo) SIMD lerp
+float n3d_lerp(float k,
+    const float& a,
+    const float& b)
+{
+    return ((1.f - k) * a) + (k * b);
+}
 
-        return vec2<float>(
-            n3d_lerp(k, a.x, b.x),
-            n3d_lerp(k, a.y, b.y)
-            );
-    }
+vec2f_t n3d_lerp(float k,
+    const vec2f_t& a,
+    const vec2f_t& b)
+{
+    //(todo) SIMD lerp
 
-    vec4f_t n3d_lerp(float k,
-                     const vec4f_t & a,
-                     const vec4f_t & b) {
+    return vec2<float>(
+        n3d_lerp(k, a.x, b.x),
+        n3d_lerp(k, a.y, b.y));
+}
 
-        //(todo) SIMD lerp
+vec4f_t n3d_lerp(float k,
+    const vec4f_t& a,
+    const vec4f_t& b)
+{
+    //(todo) SIMD lerp
 
-        return vec4<float>(
-            n3d_lerp(k, a.x, b.x),
-            n3d_lerp(k, a.y, b.y),
-            n3d_lerp(k, a.z, b.z),
-            n3d_lerp(k, a.w, b.w)
-            );
-    }
+    return vec4<float>(
+        n3d_lerp(k, a.x, b.x),
+        n3d_lerp(k, a.y, b.y),
+        n3d_lerp(k, a.z, b.z),
+        n3d_lerp(k, a.w, b.w));
+}
 
 } // namespace {}
