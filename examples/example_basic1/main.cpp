@@ -14,12 +14,9 @@ static constexpr size_t array_length(const type_t (&array)[size])
 
 // vertex position
 vec3f_t p[] = {
-    { 0.f, -1.f, -2.f },
-    { 1.f, 1.f, -2.f },
-    { -1.f, 1.f, -2.f },
-    { 1.f, -1.f, -3.f },
-    { 2.f, 1.f, -3.f },
-    { 0.f, 1.f, -3.f },
+    {  0.f, -1.f, -.5f },
+    {  1.f,  1.f, -.5f },
+    { -1.f,  1.f, -.5f },
 };
 
 // vertex colour
@@ -27,16 +24,11 @@ vec4f_t c[] = {
     { 1.f, 0.f, 0.f, 1.f },
     { 0.f, 1.f, 0.f, 1.f },
     { 0.f, 0.f, 1.f, 1.f },
-
-    { 1.f, 0.f, 0.f, 1.f },
-    { 0.f, 1.f, 0.f, 1.f },
-    { 0.f, 0.f, 1.f, 1.f },
 };
 
 // index buffer
 uint32_t ix[] = {
-    0, 2, 1,
-    3, 5, 4,
+    0, 1, 2,
 };
 
 } // namespace {}
@@ -76,13 +68,14 @@ struct app_t {
         n3d_.bind(buffer_);
 
         // create a rasterizer and bind it
-        rast_ = n3d_rasterizer_new(n3d_raster_reference);
+        rast_ = n3d_rasterizer_new(n3d_raster_rgb);
         n3d_.bind(rast_);
 
         // bind a projection matrix
         mat4f_t proj;
-        n3d_frustum(proj, -1.f, 1.f, -1.f, 1.f, 1.f, 100.f);
+        n3d_identity(proj);
         n3d_.bind(&proj, n3d_projection);
+        n3d_.bind(&proj, n3d_model_view);
 
         return true;
     }
@@ -109,6 +102,8 @@ struct app_t {
     bool main()
     {
         while (tick()) {
+
+            n3d_.clear(0x101010, -100.f);
 
             SDL_FillRect(screen_, nullptr, 0x101010);
 

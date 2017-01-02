@@ -1,45 +1,42 @@
 #define _SDL_main_h
 #include <SDL.h>
+#include <math.h>
 #include <nano3d.h>
 #include <nano3d_ex.h>
 #include <source/n3d_math.h>
-#include <math.h>
 
 namespace {
 
-    vec3f_t p[] = {
+vec3f_t p[] = {
+    { 1.f, 1.f, -3.f },
+    { 1.f, -1.f, -3.f },
+    { -1.f, 1.f, -3.f },
+    { -1.f, -1.f, -3.f },
+};
 
-        { 1.f, 1.f,-3.f },
-        { 1.f,-1.f,-3.f },
-        {-1.f, 1.f,-3.f },
-        {-1.f,-1.f,-3.f },
-    };
+vec4f_t c[] = {
+    { 1.f, 0.f, 0.f, 1.f },
+    { 0.f, 1.f, 0.f, 1.f },
+    { 0.f, 0.f, 1.f, 1.f },
+    { 1.f, 1.f, 0.f, 1.f },
+};
 
-    vec4f_t c[] = {
-
-        { 1.f, 0.f, 0.f, 1.f },
-        { 0.f, 1.f, 0.f, 1.f },
-        { 0.f, 0.f, 1.f, 1.f },
-        { 1.f, 1.f, 0.f, 1.f },
-    };
-
-    uint32_t ix[] = {
-
-        0, 1, 2,
-        2, 1, 3,
-    };
+uint32_t ix[] = {
+    0, 1, 2,
+    2, 1, 3,
+};
 
 } // namespace {}
 
 struct app_t {
 
-    SDL_Surface * screen_;
+    SDL_Surface* screen_;
     nano3d_t n3d_;
-    n3d_rasterizer_t * rast_;
+    n3d_rasterizer_t* rast_;
     float delta;
 
-    bool init() {
-
+    bool init()
+    {
         if (SDL_Init(SDL_INIT_VIDEO))
             return false;
         screen_ = SDL_SetVideoMode(512, 512, 32, 0);
@@ -64,13 +61,13 @@ struct app_t {
         n3d_.bind(&vb);
 
         // bind a rasterizer
-        rast_ = n3d_rasterizer_new(n3d_raster_reference);
+        rast_ = n3d_rasterizer_new(n3d_raster_rgb);
         n3d_.bind(rast_);
 
         // bind a model view matrix
-//        mat4f_t mvm;
-//        n3d_identity(mvm);
-//        n3d_.bind(&mvm, n3d_model_view);
+        //        mat4f_t mvm;
+        //        n3d_identity(mvm);
+        //        n3d_.bind(&mvm, n3d_model_view);
 
         // bind a projection matrix
         mat4f_t proj;
@@ -82,16 +79,16 @@ struct app_t {
         return true;
     }
 
-    bool stop() {
-
+    bool stop()
+    {
         n3d_.stop();
         n3d_rasterizer_delete(rast_);
         SDL_Quit();
         return true;
     }
 
-    bool tick() {
-
+    bool tick()
+    {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
 
@@ -102,25 +99,25 @@ struct app_t {
     }
 
     const float pi2 = n3d_pi * 2.f;
-    
-    bool main() {
 
+    bool main()
+    {
         while (tick()) {
 
             float st = sinf(delta);
-            float ct =-cosf(delta);
+            float ct = -cosf(delta);
 
-            float d =-1.5f;
+            float d = -1.5f;
 
             p[0].x = st;
             p[0].z = d + ct;
             p[1].x = st;
             p[1].z = d + ct;
-            p[2].x =-st;
+            p[2].x = -st;
             p[2].z = d - ct;
-            p[3].x =-st;
+            p[3].x = -st;
             p[3].z = d - ct;
-            
+
             n3d_.clear(0x101010, -100.f);
 
             // draw 6 elements from an index buffer
@@ -129,15 +126,15 @@ struct app_t {
             n3d_.present();
             SDL_Flip(screen_);
 
-            delta = (delta >= pi2*2) ? 0.f : delta+0.01f;
+            delta = (delta >= pi2 * 2) ? 0.f : delta + 0.01f;
         }
 
         return true;
     }
 };
 
-int main(int argc, char ** args) {
-
+int main(int argc, char** args)
+{
     app_t app;
 
     if (!app.init())

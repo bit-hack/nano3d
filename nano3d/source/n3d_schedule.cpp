@@ -79,7 +79,7 @@ bool n3d_schedule_t::start(const uint32_t max_threads)
 
         // create a bunch of worker threads
         for (uint32_t i = 0; i<max_threads; ++i) {
-            thread_.push_back(new n3d_worker_t(*this));
+            thread_.emplace_back(new n3d_worker_t(*this));
         }
 
         // shuffle the thread to bin mapping

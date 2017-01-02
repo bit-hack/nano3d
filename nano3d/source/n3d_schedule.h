@@ -49,7 +49,7 @@ protected:
     std::unique_ptr<uint32_t> thread_map_;
 
     std::vector<n3d_bin_t*> bins_;
-    std::vector<n3d_thread_t*> thread_;
+    std::vector<std::unique_ptr<n3d_thread_t>> thread_;
 
     n3d_atomic_t frame_num_;
     n3d_atomic_t counter_;

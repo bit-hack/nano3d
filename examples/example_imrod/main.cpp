@@ -52,7 +52,7 @@ struct app_t {
         n3d_.bind(&vb);
 
         // bind a rasterizer
-        rast_ = n3d_rasterizer_new(n3d_raster_reference);
+        rast_ = n3d_rasterizer_new(n3d_raster_rgb);
         n3d_.bind(rast_);
 
         // bind a projection matrix

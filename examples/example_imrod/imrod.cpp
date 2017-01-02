@@ -8,6 +8,13 @@ extern const uint32_t obj_num_vertex;
 extern const uint32_t obj_num_rgba;
 extern const uint32_t obj_num_index;
 
+namespace {
+template <typename type_t, size_t size>
+constexpr size_t array_length(const type_t (&array)[size]) {
+    return size;
+}
+} // namespace {}
+
 const float obj_vertex[13890] = {
     -8.67556f,  4.40495f,   0.658908f,  -7.22428f,  5.41207f,   0.622873f,
     -9.04334f,  5.04753f,   1.86687f,   -8.91145f,  6.25003f,   0.485955f,
@@ -8132,6 +8139,6 @@ const float obj_rgba[18520] = {
     0.99609375f, 0.02734375f, 0.02734375f, 0.02734375f, 0.99609375f,
 };
 
-const uint32_t obj_num_vertex = sizeof(obj_vertex)/sizeof(float);
-const uint32_t obj_num_rgba   = sizeof(obj_rgba)/sizeof(float);
-const uint32_t obj_num_index  = sizeof(obj_index)/sizeof(uint32_t);
+const uint32_t obj_num_vertex = array_length(obj_vertex);
+const uint32_t obj_num_rgba   = array_length(obj_rgba);
+const uint32_t obj_num_index  = array_length(obj_index);

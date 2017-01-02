@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 #include "n3d_atomic.h"
 #include "n3d_forward.h"
@@ -28,7 +29,7 @@ protected:
     static void trampoline(n3d_thread_t*);
 
     struct detail_t;
-    detail_t* detail_;
+    std::unique_ptr<detail_t> detail_;
 };
 
 // spinlock

@@ -4,7 +4,7 @@
 #include "source/n3d_forward.h"
 
 enum n3d_rasterizer_e {
-    n3d_raster_reference,
+    n3d_raster_rgb,
     n3d_raster_depth,
     n3d_raster_texture
 };

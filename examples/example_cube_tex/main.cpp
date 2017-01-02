@@ -214,7 +214,6 @@ struct app_t {
             n3d_.draw(array_length(ix), ix);
             n3d_.present();
 
-#if 1
             n3d_rotate(mvm, jx, jy, jz);
             n3d_translate(mvm, vec3(0.f, 0.f, -4.0f));
             n3d_.bind(&mvm, n3d_model_view);
@@ -222,7 +221,6 @@ struct app_t {
             // draw the cube
             n3d_.draw(array_length(ix), ix);
             n3d_.present();
-#endif
 
             SDL_Flip(screen_);
 

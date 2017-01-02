@@ -178,7 +178,7 @@ struct nano3d_t {
                        const uint32_t num_threads);
 
     // description:
-    //      shut down an n3d rendering context.
+    //      shut down the rendering context.
     //
     // inputs:
     //      n/a
@@ -195,6 +195,8 @@ struct nano3d_t {
 
     // description:
     //      bind a vertex buffer to the n3d pipeline.
+    //      the bound vertex buffer must remail valid until the next call to
+    //      present().
     //
     // inputs:
     //      buffer      - buffer to bind to pipeline
@@ -202,6 +204,8 @@ struct nano3d_t {
 
     // description:
     //      bind a rasterizer to the n3d pipeline.
+    //      the bound rasterizer must remain valid until the next call to
+    //      present().
     //
     // inputs:
     //      rasterizer  - rasterizer to bind to pipeline
@@ -210,7 +214,7 @@ struct nano3d_t {
     // description:
     //      bind a texture to the n3d pipeline.
     //      the bound structure must remain valid until the next call to
-    //      n3d_swap().
+    //      present().
     //
     // inputs:
     //      texture     - texture to bind to pipeline
@@ -218,7 +222,8 @@ struct nano3d_t {
 
     // description:
     //      bind a matrix to the n3d pipeline which will transform
-    //      vertices from world space to ndc space.
+    //      vertices from world space to ndc space.  the bound matrix will
+    //      be copied and can be changed before calling present().
     //
     // inputs:
     //      matrix      - 4x4 matrix to be bound
@@ -228,6 +233,8 @@ struct nano3d_t {
 
     // description:
     //      bin a set of user data to the current n3d pipeline.
+    //      the bound pointer must remain valid until the next call to
+    //      n3d_swap().
     //
     // input:
     //      in          - the user data to be 

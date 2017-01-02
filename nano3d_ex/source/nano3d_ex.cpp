@@ -30,7 +30,7 @@ n3d_rasterizer_t* n3d_rasterizer_new(n3d_rasterizer_e type)
         rast.raster_proc_ = n3d_raster_texture_raster;
         return new n3d_rasterizer_t(rast);
 
-    case (n3d_raster_reference):
+    case (n3d_raster_rgb):
         rast.raster_proc_ = n3d_raster_rgb_raster;
         return new n3d_rasterizer_t(rast);
 
