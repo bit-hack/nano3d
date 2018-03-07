@@ -5,6 +5,7 @@
 #include "n3d_types.h"
 #include "nano3d.h"
 
+// command sent from the main API to a frame bin
 struct n3d_command_t {
 
     enum {
@@ -29,12 +30,7 @@ struct n3d_command_t {
     };
 };
 
-const uint32_t n3d_command_size = sizeof(n3d_command_t);
-
 typedef n3d_pipe_t<n3d_command_t, 1024> n3d_command_pipe_t;
-
-// this many kb per bin
-static const size_t _pipe_size_ = sizeof(n3d_command_pipe_t) / 1024;
 
 struct n3d_bin_t {
 
@@ -44,13 +40,13 @@ struct n3d_bin_t {
         , counter_(nullptr)
     {
         state_.target_[n3d_target_pixel].uint32_ = nullptr;
-        state_.target_[n3d_target_depth].float_ = nullptr;
+        state_.target_[n3d_target_depth].float_  = nullptr;
         state_.target_[n3d_target_aux_1].uint32_ = nullptr;
         state_.target_[n3d_target_aux_2].uint32_ = nullptr;
         state_.texure_ = nullptr;
     }
 
-    // no copy
+    // disable copy
     n3d_bin_t(const n3d_bin_t&) = delete;
     n3d_bin_t& operator=(const n3d_bin_t&) = delete;
 
@@ -72,6 +68,7 @@ struct n3d_bin_t {
     // presents.
     n3d_atomic_t* counter_;
 
+    // unique bin id
     uint16_t id_;
 };
 

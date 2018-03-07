@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 
 #include "n3d_atomic.h"
 #include "n3d_forward.h"
@@ -16,13 +17,14 @@
 #define PIPE_TYPE PIPE_TYPE_EXPERIMENTAL
 
 #if (PIPE_TYPE == PIPE_TYPE_EXPERIMENTAL)
-//note: this pipe is suitable for only ONE producer and ONE consumer there must
-//      not be concurrent access to either end of this pipe.  it is my hope
-//      that this pipe design will minimise the contention between producer and
-//      the consumer to a minium.
+//note: this pipe is suitable for only ONE producer and ONE consumer. there
+//      must not be concurrent access to either end of this pipe.  it is my
+//      hop that this pipe design will minimise the contention between
+//      producer and the consumer to a minium.
 template <typename type_t, uint32_t size_ = 1024>
 struct n3d_pipe_t {
 
+    static_assert(size_ > 1, "size can not be less than 2");
     static_assert(power_of_two(size_), "size must be power of two");
 
     n3d_pipe_t()
@@ -30,19 +32,16 @@ struct n3d_pipe_t {
         , tail_(0)
     {
         // set all locks to unlocked
-        for (uint32_t i = 0; i < size_; ++i) {
-            lock_[i] = c_unlocked;
-        }
+        lock_.fill(c_unlocked);
     }
 
     n3d_pipe_t(const n3d_pipe_t&) = delete;
 
+    // called by the producer thread
     bool push(const type_t& in)
     {
-
-        uint32_t i = head_ & mask_;
+        const uint32_t i = head_ & mask_;
         uint8_t& lock = lock_[i];
-
         if (lock == c_unlocked) {
             data_[i] = in;
             lock = c_locked;
@@ -52,12 +51,11 @@ struct n3d_pipe_t {
         return false;
     }
 
+    // called by the consumer thread
     bool pop(type_t& out)
     {
-
-        uint32_t i = tail_ & mask_;
+        const uint32_t i = tail_ & mask_;
         uint8_t& lock = lock_[i];
-
         if (lock == c_locked) {
             out = data_[i];
             lock = c_unlocked;
@@ -70,11 +68,10 @@ struct n3d_pipe_t {
 protected:
     static const uint8_t c_unlocked = 0;
     static const uint8_t c_locked = 1;
-
     static const uint32_t mask_ = size_ - 1;
 
-    type_t data_[size_];
-    uint8_t lock_[size_];
+    std::array<type_t, size_> data_;
+    std::array<uint8_t, size_> lock_;
     uint32_t head_, tail_;
 };
 #endif
@@ -141,7 +138,7 @@ protected:
 
     n3d_spinlock_t lock_;
 
-    type_t data_[size_];
+    std::array<type_t, size_> data_;
     n3d_atomic_t head_, tail_;
 };
 #endif

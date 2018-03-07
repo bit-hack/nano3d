@@ -51,7 +51,7 @@ struct app_t {
             return false;
 
         // start nano3d instance
-        n3d_framebuffer_t framebuffer = {
+        n3d_target_t framebuffer = {
             512,
             512,
             (uint32_t*)screen_->pixels
@@ -76,7 +76,6 @@ struct app_t {
         n3d_identity(proj);
         n3d_.bind(&proj, n3d_projection);
         n3d_.bind(&proj, n3d_model_view);
-
         return true;
     }
 
@@ -102,20 +101,14 @@ struct app_t {
     bool main()
     {
         while (tick()) {
-
+            // clear the framebuffer
             n3d_.clear(0x101010, -100.f);
-
-            SDL_FillRect(screen_, nullptr, 0x101010);
-
             // draw 6 elements from the index buffer
             n3d_.draw(array_length(ix), ix);
-
-            // copy nano3d state to framebuffer
+            // flush nano3d state to framebuffer
             n3d_.present();
-
             SDL_Flip(screen_);
         }
-
         return true;
     }
 };

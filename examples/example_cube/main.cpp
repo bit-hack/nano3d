@@ -63,7 +63,7 @@ struct app_t {
             return false;
 
         // start nano3d instance
-        n3d_framebuffer_t framebuffer = {
+        n3d_target_t framebuffer = {
             512,
             512,
             (uint32_t*)screen_->pixels

@@ -25,7 +25,6 @@ uint32_t clip_near(const vec4f_t& v0,
     vec2f_t& tsplit,
     vec4f_t& csplit)
 {
-
     const float npv = 1.f;
 
     bool a_out = (v0.w <= npv);
@@ -62,10 +61,9 @@ uint32_t clip_near(const vec4f_t& v0,
 // check if a triangle is backfacing
 bool is_backfacing(const vec4f_t& a, const vec4f_t& b, const vec4f_t& c)
 {
-
     // test z componant of cross product
     const float cross = ((c.x - a.x) * (c.y - b.y) - (c.x - b.x) * (c.y - a.y));
-    return ((*(uint32_t*)&cross) & 0x80000000) == 0;
+    return ((*(const uint32_t*)&cross) & 0x80000000) == 0;
 }
 
 } // namespace {}

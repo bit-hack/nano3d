@@ -28,7 +28,7 @@ void send_one(
 
 // send a message to all bins
 void send_all(
-    n3d_frame_t* frame,
+    n3d_framebuffer_t* frame,
     n3d_command_t& cmd)
 {
     n3d_assert(frame);
@@ -41,8 +41,8 @@ void send_all(
 
 // create a new framebuffer
 bool n3d_frame_create(
-    n3d_frame_t* frame,
-    const n3d_framebuffer_t* framebuffer)
+    n3d_framebuffer_t* frame,
+    const n3d_target_t* framebuffer)
 {
     const uint32_t bin_w = 64, bin_h = 64;
 
@@ -57,12 +57,8 @@ bool n3d_frame_create(
     const int nbins = bx * by;
     n3d_assert(nbins > 0);
 
-    //    frame->num_bins_ = nbins;
-
-    //    frame->bin_ = new n3d_bin_t[nbins];
-    //    n3d_assert(frame->bin_);
-
     // allocate a new depth buffer
+    // xxx: this needs to be an aligned alloc
     frame->depth_.reset(new float[fb_width * fb_height]);
     float* depth = frame->depth_.get();
     n3d_assert(depth);
@@ -82,9 +78,9 @@ bool n3d_frame_create(
         bin.id_ = i;
 
         // frame buffer dimensions
-        state.width_ = bin_w;
+        state.width_  = bin_w;
         state.height_ = bin_h;
-        state.pitch_ = framebuffer->width_;
+        state.pitch_  = framebuffer->width_;
 
         // bin integer screen space location
         uint32_t iox = (i % bx) * bin_w;
@@ -98,7 +94,8 @@ bool n3d_frame_create(
         uint32_t fboffs = +iox + ioy * framebuffer->width_;
 
         // render target state
-        state.target_[n3d_target_depth].float_ = fboffs + depth;
+        state.target_[n3d_target_depth].float_  = fboffs + depth;
+        // xxx: check for aligned bin start
         state.target_[n3d_target_pixel].uint32_ = fboffs + framebuffer->pixels_;
         state.target_[n3d_target_aux_1].uint32_ = nullptr;
         state.target_[n3d_target_aux_2].uint32_ = nullptr;
@@ -111,16 +108,15 @@ bool n3d_frame_create(
     return true;
 }
 
-void n3d_frame_free(n3d_frame_t* frame)
+void n3d_frame_free(n3d_framebuffer_t* frame)
 {
-    //(todo) kill all workers
-
+    n3d_assert(frame);
     frame->depth_.release();
     frame->bin_.clear();
 }
 
 void n3d_frame_send_triangle(
-    n3d_frame_t* frame,
+    n3d_framebuffer_t* frame,
     n3d_rasterizer_t::triangle_t& triangle)
 {
     n3d_assert(frame);
@@ -154,7 +150,7 @@ void n3d_frame_send_triangle(
 }
 
 void n3d_frame_send_texture(
-    n3d_frame_t* frame,
+    n3d_framebuffer_t* frame,
     const n3d_texture_t* texture)
 {
     n3d_command_t cmd;
@@ -164,7 +160,7 @@ void n3d_frame_send_texture(
 }
 
 void n3d_frame_send_rasterizer(
-    n3d_frame_t* frame,
+    n3d_framebuffer_t* frame,
     const n3d_rasterizer_t* rasterizer)
 {
     n3d_command_t cmd;
@@ -174,7 +170,7 @@ void n3d_frame_send_rasterizer(
 }
 
 void n3d_frame_clear(
-    n3d_frame_t* frame,
+    n3d_framebuffer_t* frame,
     const uint32_t argb,
     const float z)
 {
@@ -185,7 +181,7 @@ void n3d_frame_clear(
     send_all(frame, cmd);
 }
 
-void n3d_frame_present(n3d_frame_t* frame)
+void n3d_frame_present(n3d_framebuffer_t* frame)
 {
     n3d_command_t cmd;
     cmd.command_ = cmd.cmd_present;
@@ -193,7 +189,7 @@ void n3d_frame_present(n3d_frame_t* frame)
 }
 
 void n3d_frame_send_user_data(
-    n3d_frame_t* frame,
+    n3d_framebuffer_t* frame,
     const n3d_user_data_t* user_data)
 {
     n3d_command_t cmd;

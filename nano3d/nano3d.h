@@ -27,16 +27,17 @@ struct n3d_texture_t {
     uint32_t * texels_;
 };
 
-// frame buffer definition
+// render target definition
 //      this forms the render target for an n3d pipeline and
 //      all output will be written here.
-struct n3d_framebuffer_t {
+struct n3d_target_t {
 
-    //todo: add pitch?
+    // todo: add pitch?
     uint32_t   width_;
     uint32_t   height_;
 
     // raw pixel data as 32bits per pixel
+    // XXX: must be aligned?
     uint32_t * pixels_;
 };
 
@@ -77,6 +78,8 @@ struct n3d_rasterizer_t {
 
         interp_t w_;    // 1/w
 
+        // XXX: instead of u,v,r,g,b just have a generic array of parameters
+
         interp_t u_;    // u/w
         interp_t v_;    // v/w
 
@@ -102,8 +105,8 @@ struct n3d_rasterizer_t {
     struct state_t {
 
         // render targets
+        //   one of n3d_target_e
         target_t target_[4];
-
         // currently bound texture
         const n3d_texture_t * texure_;
 
@@ -129,21 +132,18 @@ struct n3d_rasterizer_t {
 
 // return codes for n3d api functions
 enum n3d_result_e {
-
     n3d_fail,
     n3d_sucess,
 };
 
 // specifies the transform stages that can be bound to
 enum n3d_matrix_e {
-
     n3d_projection,
     n3d_model_view,
 };
 
 // rasterizer target buffers
 enum n3d_target_e {
-
     n3d_target_pixel,
     n3d_target_depth,
     n3d_target_aux_1,
@@ -152,7 +152,6 @@ enum n3d_target_e {
 
 // primitive stitching mode
 enum n3d_primitive_e {
-
     n3d_prim_tri,
     n3d_prim_tri_stip,
     n3d_prim_tri_fan,
@@ -169,11 +168,11 @@ struct nano3d_t {
     //      any other functions.
     //
     // inputs:
-    //      frame       - input frame buffer which is the render target
+    //      target      - input render target
     //      num_planes  - number of additional colour planes to allocate.
     //                    each colour plane is 32bits per pixel.
     //      num_threads - number of worker threads to spawn for rendering.
-    n3d_result_e start(const n3d_framebuffer_t *frame,
+    n3d_result_e start(const n3d_target_t *target,
                        const uint32_t num_planes,
                        const uint32_t num_threads);
 

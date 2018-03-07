@@ -129,12 +129,12 @@ struct app_t {
             return false;
 
         // start nano3d instance
-        n3d_framebuffer_t framebuffer = {
+        n3d_target_t framebuffer = {
             512,
             512,
             (uint32_t*)screen_->pixels
         };
-        n3d_.start(&framebuffer, 0, 1);
+        n3d_.start(&framebuffer, 0, 0 /* single threaded */);
 
         // bind the texture
         image = load_bmp("C:\\repos\\nano3d\\texture.bmp");

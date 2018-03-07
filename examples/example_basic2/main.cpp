@@ -44,7 +44,7 @@ struct app_t {
             return false;
 
         // start nano3d instance
-        n3d_framebuffer_t framebuffer = {
+        n3d_target_t framebuffer = {
             512,
             512,
             (uint32_t*)screen_->pixels
@@ -104,7 +104,7 @@ struct app_t {
     {
         while (tick()) {
 
-            float st = sinf(delta);
+            float st =  sinf(delta);
             float ct = -cosf(delta);
 
             float d = -1.5f;
@@ -126,7 +126,7 @@ struct app_t {
             n3d_.present();
             SDL_Flip(screen_);
 
-            delta = (delta >= pi2 * 2) ? 0.f : delta + 0.01f;
+            delta += (delta >= pi2) ? -pi2 : 0.01f;
         }
 
         return true;

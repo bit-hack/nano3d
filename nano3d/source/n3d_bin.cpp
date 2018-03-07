@@ -8,7 +8,6 @@ namespace {
 // per frame bin clear
 void bin_clear(n3d_bin_t& bin, uint32_t argb, float depth)
 {
-
     const uint32_t height = bin.state_.height_;
     const uint32_t width = bin.state_.width_;
     const uint32_t pitch = bin.state_.pitch_;
@@ -19,8 +18,8 @@ void bin_clear(n3d_bin_t& bin, uint32_t argb, float depth)
     for (uint32_t y = 0; y < height; ++y) {
 
         for (uint32_t x = 0; x < width; ++x) {
-            c[x] = argb;
-            z[x] = depth;
+            c ? c[x] = argb: 0;
+            z ? z[x] = depth: 0;
         }
 
         z += pitch;

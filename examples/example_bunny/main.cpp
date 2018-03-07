@@ -5,9 +5,9 @@
 #include <nano3d_ex.h>
 #include <source/n3d_math.h>
 
+// from bunny.cpp
 extern const float obj_vertex[1506];
 extern const uint32_t obj_index[3000];
-
 extern const uint32_t obj_num_vertex;
 extern const uint32_t obj_num_index;
 
@@ -33,7 +33,7 @@ struct app_t {
             return false;
 
         // start nano3d instance
-        n3d_framebuffer_t framebuffer = {
+        n3d_target_t framebuffer = {
             c_width,
             c_height,
             (uint32_t*)screen_->pixels

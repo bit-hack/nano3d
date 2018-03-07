@@ -5,6 +5,11 @@
 #include "n3d_forward.h"
 #include "n3d_util.h"
 
+// the n3d_thread is a simple abstration of a system thread.  in the context
+// of nano3d a thread is used as part of a worker system to process all work
+// in a frames bins.
+
+// relinquish a threads timeslice
 void n3d_yield();
 
 // abstract system thread
@@ -35,10 +40,9 @@ protected:
 // spinlock
 struct n3d_spinlock_t {
 
-    n3d_atomic_t atom_;
+    enum lock_t { c_unlocked = 0, c_locked = 1 };
 
-    static const long c_unlocked = 0;
-    static const long c_locked = 1;
+    n3d_atomic_t atom_;
 
     n3d_spinlock_t()
         : atom_(c_unlocked)
@@ -75,6 +79,7 @@ struct n3d_spinlock_t {
     }
 
 protected:
+    // no copy
     n3d_spinlock_t(const n3d_spinlock_t&) = delete;
     n3d_spinlock_t& operator=(const n3d_spinlock_t&) = delete;
 };
@@ -85,8 +90,7 @@ struct n3d_scope_spinlock_t {
     n3d_scope_spinlock_t(n3d_spinlock_t& sl, bool aquire = true)
         : lock_(sl)
     {
-        if (aquire)
-            lock_.lock();
+        aquire ? lock_.lock() : 0;
     }
 
     ~n3d_scope_spinlock_t()

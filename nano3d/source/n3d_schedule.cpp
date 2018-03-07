@@ -31,8 +31,8 @@ void n3d_schedule_t::next_frame()
 
     n3d_assert(counter_ == 0);
 
-    long new_val = (long)bins_.size();
-    long old_val = n3d_atomic_xchg(counter_, new_val);
+    const long new_val = (long)bins_.size();
+    const long old_val = n3d_atomic_xchg(counter_, new_val);
 
     n3d_assert(old_val == 0);
 
@@ -52,7 +52,7 @@ void n3d_schedule_t::add(n3d_bin_t* bin, uint32_t num)
 
 void n3d_schedule_t::reshuffle()
 {
-    n3d_assert(thread_.size()==num_threads_);
+    n3d_assert(thread_.size() == num_threads_);
 
     if (num_threads_) {
         n3d_assert(thread_map_.get());
@@ -60,9 +60,9 @@ void n3d_schedule_t::reshuffle()
 
         // todo: make some kind of priority heap here based on bin execution cost
 
-        uint32_t stride = num_bins_/num_threads_;
+        uint32_t stride = num_bins_ / num_threads_;
 
-        for (uint32_t i = 0; i<num_threads_; ++i) {
+        for (uint32_t i = 0; i < num_threads_; ++i) {
             thread_map_.get()[i] = i * stride;
         }
     }
@@ -78,7 +78,7 @@ bool n3d_schedule_t::start(const uint32_t max_threads)
         thread_map_.reset(new uint32_t[max_threads]);
 
         // create a bunch of worker threads
-        for (uint32_t i = 0; i<max_threads; ++i) {
+        for (uint32_t i = 0; i < max_threads; ++i) {
             thread_.emplace_back(new n3d_worker_t(*this));
         }
 
@@ -86,11 +86,10 @@ bool n3d_schedule_t::start(const uint32_t max_threads)
         reshuffle();
 
         // launch all of the workers
-        for (auto & thread:thread_) {
+        for (auto& thread : thread_) {
             thread->start();
         }
-    }
-    else {
+    } else {
         //todo: do we need to reshuffle?
     }
 
@@ -100,7 +99,7 @@ bool n3d_schedule_t::start(const uint32_t max_threads)
 n3d_bin_t* n3d_schedule_t::get_work(n3d_thread_t* thread)
 {
     // note: thread may be nullptr if its the main thread requesting work
-//    n3d_assert(thread_map_.get());
+    //    n3d_assert(thread_map_.get());
 
     // if the counter is 0 we know there is no work to do
     if (counter_ == 0) {
@@ -124,16 +123,15 @@ n3d_bin_t* n3d_schedule_t::get_work(n3d_thread_t* thread)
             b = bins_[i];
         }
         n3d_assert(b);
-
         // try to acquire this bin
         if (b->lock_.try_lock()) {
-
             // if this frame is complete
-            if (b->frame_ > frame_num_) {
+            if (b->frame_>frame_num_) {
                 // unlock and skip over
                 b->lock_.unlock();
-            } else {
-                // bin needs processing
+            }
+            else {
+                // bin needs processing, leave locked and return it
                 return b;
             }
         }
@@ -156,4 +154,5 @@ void n3d_schedule_t::stop()
         n3d_assert(thread);
         thread->stop();
     }
+    thread_.clear();
 }

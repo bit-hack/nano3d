@@ -34,13 +34,33 @@
 #endif
 
 template <typename type_t>
-static type_t* checked(type_t* x)
+static inline type_t* checked(type_t* x)
 {
     n3d_assert(x);
     return x;
 }
 
-static constexpr
+static inline constexpr
 bool power_of_two(uint32_t x) {
     return ((x - 1) & x) == 0;
+}
+
+inline constexpr float max2(const float a, const float b)
+{
+    return (a > b) ? a : b;
+}
+
+inline constexpr float min2(const float a, const float b)
+{
+    return (a < b) ? a : b;
+}
+
+inline constexpr float max3(const float a, const float b, const float c)
+{
+    return max2(a, max2(b, c));
+}
+
+inline constexpr float min3(const float a, const float b, const float c)
+{
+    return min2(a, min2(b, c));
 }

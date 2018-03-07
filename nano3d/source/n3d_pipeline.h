@@ -1,7 +1,7 @@
 #include "n3d_decl.h"
 #include "n3d_forward.h"
 
-// the n3d_pipeline is responsible for transforming vertices threw each stage
+// the n3d_pipeline is responsible for transforming vertices through each stage
 // of the geometry pipeline:
 // - world space transform
 // - projection to homogeneous clip space

@@ -18,6 +18,7 @@ struct app_t {
     SDL_Surface* screen_;
     nano3d_t n3d_;
     n3d_rasterizer_t* rast_;
+    float r_, p_;
 
     bool init()
     {
@@ -31,11 +32,11 @@ struct app_t {
             return false;
         SDL_WM_SetCaption("nano3D demo", nullptr);
         screen_ = SDL_SetVideoMode(c_width, c_height, 32, 0);
-        if (!screen_)
+        if (!(screen_ && screen_->pixels))
             return false;
 
         // start nano3d instance
-        n3d_framebuffer_t framebuffer = {
+        n3d_target_t framebuffer = {
             c_width,
             c_height,
             (uint32_t*)screen_->pixels
@@ -89,35 +90,51 @@ struct app_t {
         v = (v + i > n3d_pi2) ? v + i - n3d_pi2 : v + i;
     }
 
+    void set_fps_title(double diff)
+    {
+        std::array<char, 128> title;
+        sprintf_s(title.data(), title.size(), "fps: %f", diff);
+        SDL_WM_SetCaption(title.data(), nullptr);
+    }
+
+    void frame() {
+        // update rotation and movement
+        inc(r_, 0.04021f);
+        inc(p_, 0.01021f);
+
+        // clear the frame buffer
+        const float c_clear_depth = 1.f / 1024;
+        n3d_.clear(0x101010, c_clear_depth);
+
+        // bind a model view matrix
+        mat4f_t mvm;
+        n3d_rotate(mvm, n3d_pi, r_, 0.f);
+        n3d_translate(mvm, vec3(0.f, 16.f, sinf(p_) * 64 - 128.f));
+        n3d_.bind(&mvm, n3d_model_view);
+
+        // draw the model
+        n3d_.draw(obj_num_index, obj_index);
+
+        // rasterizer one frame
+        n3d_.present();
+
+        // flip the sdl surface
+        SDL_Flip(screen_);
+    }
+
     bool main()
     {
-        float r = 0.f, p = 0.f;
-
-        // while the demo is active
-        while (tick()) {
-
-            // update rotation and movement
-            inc(r, 0.04021f);
-            inc(p, 0.01021f);
-
-            // clear the frame buffer
-            const float c_clear_depth = 1.f / 1024;
-            n3d_.clear(0x101010, c_clear_depth);
-
-            // bind a model view matrix
-            mat4f_t mvm;
-            n3d_rotate(mvm, n3d_pi, r, 0.f);
-            n3d_translate(mvm, vec3(0.f, 16.f, sinf(p) * 64 - 128.f));
-            n3d_.bind(&mvm, n3d_model_view);
-
-            // draw the model
-            n3d_.draw(obj_num_index, obj_index);
-
-            // rasterizer one frame
-            n3d_.present();
-
-            // flip the sdl surface
-            SDL_Flip(screen_);
+        static constexpr uint32_t c_interval = 32;
+        r_ = 0.f, p_ = 0.f;
+        uint32_t t0 = SDL_GetTicks();
+        uint32_t t1 = t0;
+        for (uint32_t i = 0; tick(); ++i) {
+            if (i % c_interval == 0) {
+                t0 = t1;
+                t1 = SDL_GetTicks();
+                set_fps_title((1000.0 * c_interval) / double(t1 - t0));
+            }
+            frame();
         }
         return true;
     }

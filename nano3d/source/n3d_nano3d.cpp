@@ -16,18 +16,23 @@ struct nano3d_t::detail_t {
 
     detail_t()
         : vertex_buffer_()
-        , framebuffer_()
+        , target_()
     {
         n3d_identity(matrix_[n3d_model_view]);
         n3d_identity(matrix_[n3d_projection]);
     }
 
+    virtual ~detail_t()
+    {
+        n3d_frame_free(&frame_);
+    }
+
     n3d_vertex_buffer_t vertex_buffer_;
 
-    n3d_framebuffer_t framebuffer_;
+    n3d_target_t target_;
     std::array<mat4f_t, 2> matrix_;
 
-    n3d_frame_t frame_;
+    n3d_framebuffer_t frame_;
     n3d_schedule_t schedule_;
 
     struct {
@@ -45,17 +50,18 @@ nano3d_t::nano3d_t()
 
 nano3d_t::~nano3d_t()
 {
+    stop();
     n3d_assert(detail_);
     delete detail_;
 }
 
 n3d_result_e nano3d_t::start(
-    const n3d_framebuffer_t* f,
+    const n3d_target_t* f,
     const uint32_t num_planes,
     const uint32_t num_threads)
 {
     nano3d_t::detail_t& d_ = *checked(detail_);
-    d_.framebuffer_ = *f;
+    d_.target_ = *f;
 
     // create a frame buffer and all associated bins
     if (!n3d_frame_create(&d_.frame_, f))
@@ -174,23 +180,23 @@ n3d_result_e nano3d_t::draw(
         // transform into homogeneous clip space
         n3d_transform(v, num, d_.matrix_[n3d_projection]);
 
+#if 0
         // clip triangle to viewing frustum
         n3d_clip(v, num);
         if (num < 3)
             continue;
+#endif
 
         // apply perspective division
         n3d_w_divide(v, num);
 
         // transform from ndc to screen space
-        vec2f_t sf = { float(d_.framebuffer_.width_),
-            float(d_.framebuffer_.height_) };
+        const vec2f_t sf = { 
+            float(d_.target_.width_),
+            float(d_.target_.height_) };
         n3d_ndc_to_dc(v, num, sf);
 
-        const int prep_flags = 
-            e_prepare_depth |
-            ((d_.state_.buffer_ && d_.state_.buffer_.get()->uv_) ? e_prepare_uv : 0) |
-            ((d_.state_.buffer_ && d_.state_.buffer_.get()->rgba_) ? e_prepare_rgb : 0);
+        const int prep_flags = e_prepare_depth | ((d_.state_.buffer_ && d_.state_.buffer_.get()->uv_) ? e_prepare_uv : 0) | ((d_.state_.buffer_ && d_.state_.buffer_.get()->rgba_) ? e_prepare_rgb : 0);
 
         // feed triangles to bins
         n3d_assert(num == 3 || num == 4);
@@ -209,7 +215,7 @@ n3d_result_e nano3d_t::draw(
 n3d_result_e nano3d_t::present()
 {
     nano3d_t::detail_t& d_ = *checked(detail_);
-    n3d_frame_t& frame = d_.frame_;
+    n3d_framebuffer_t& frame = d_.frame_;
 
     // send the present command
     n3d_frame_present(&frame);
@@ -237,7 +243,7 @@ n3d_result_e nano3d_t::clear(
     const float depth)
 {
     nano3d_t::detail_t& d_ = *checked(detail_);
-    n3d_frame_t& frame = d_.frame_;
+    n3d_framebuffer_t& frame = d_.frame_;
     n3d_frame_clear(&frame, rgba, depth);
     return n3d_result_e::n3d_sucess;
 }
