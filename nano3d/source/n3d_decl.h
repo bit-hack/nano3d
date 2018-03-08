@@ -3,8 +3,10 @@
 // n3d_decal:
 // externaly facing declarations
 
-#include <cstdint>
 #include <array>
+#include <cstdint>
+
+#include "n3d_config.h"
 
 template <typename type_t>
 struct vec2_t {
@@ -59,8 +61,24 @@ typedef vec4_t<float> vec4f_t;
 typedef mat4_t<float> mat4f_t;
 typedef vec2_t<int32_t> vec2i_t;
 
+enum n3d_attribute_t {
+    e_attr_b0 = 0,
+    e_attr_b1,
+    e_attr_b2,
+    e_attr_w,
+    // custom attributes beyond this point (rgb, uv, ...)
+    e_attr_custom = 4,
+    // sentinel
+    e_attr_count__ = 16
+};
+
 struct n3d_vertex_t {
     vec4f_t p_; // position
+#if !ATTRIB_ARRAY
     vec2f_t t_; // texture
     vec4f_t c_; // rgb
+#else
+    static const size_t c_num_attrs = e_attr_count__ - e_attr_custom;
+    std::array<float, c_num_attrs> attr_;
+#endif
 };

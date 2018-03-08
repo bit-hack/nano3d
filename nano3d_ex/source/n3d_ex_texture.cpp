@@ -30,6 +30,7 @@ void n3d_raster_texture_raster(
     const n3d_rasterizer_t::triangle_t& t,
     void* user)
 {
+#if 0
     const uint32_t pitch = s.pitch_;
     const uint32_t width = s.width_;
     const uint32_t height = s.height_;
@@ -120,4 +121,5 @@ void n3d_raster_texture_raster(
         depth += pitch;
 
     } // for (y axis)
+#endif
 }

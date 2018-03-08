@@ -1,6 +1,7 @@
 #pragma once
 
 #include "source/n3d_decl.h"
+#include "source/n3d_config.h"
 
 // vertex buffer definition
 //      this can be bound to and n3d pipeline
@@ -8,11 +9,16 @@ struct n3d_vertex_buffer_t {
 
     // the number of vertices in this buffer
     uint32_t   num_;
-
     // raw vertex attribute arrays
     vec3f_t  * pos_;
+
+#if 0 && ATTRIB_ARRAY
+    uint32_t num_attrs_;
+    float * attrib_;
+#else
     vec2f_t  * uv_;
     vec4f_t  * rgba_;
+#endif
 };
 
 // texture definition
@@ -61,6 +67,7 @@ struct n3d_rasterizer_t {
     // barycentric triangle
     struct triangle_t {
 
+#if !ATTRIB_ARRAY
         // barycentric interpolant
         struct interp_t {
 
@@ -78,8 +85,6 @@ struct n3d_rasterizer_t {
 
         interp_t w_;    // 1/w
 
-        // XXX: instead of u,v,r,g,b just have a generic array of parameters
-
         interp_t u_;    // u/w
         interp_t v_;    // v/w
 
@@ -87,6 +92,11 @@ struct n3d_rasterizer_t {
         interp_t g_;    // green/w
         interp_t b_;    // blue/w
         interp_t a_;    // alpha/w
+#else
+        std::array<float, e_attr_count__> v_;
+        std::array<float, e_attr_count__> sx_;
+        std::array<float, e_attr_count__> sy_;
+#endif
 
         // triangle bounds in screen space
         vec2f_t min_;

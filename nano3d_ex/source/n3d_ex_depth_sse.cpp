@@ -4,6 +4,8 @@
 #include "source/n3d_math.h"
 #include "source/n3d_util.h"
 
+#include "n3d_ex_common.h"
+
 namespace {
 
 uint32_t rgb(float r, float g, float b, float a)
@@ -17,11 +19,6 @@ uint32_t rgb(float r, float g, float b, float a)
     return (r8 << 16) | (g8 << 8) | b8;
 }
 
-struct aabb_t {
-  int32_t x0, x1;
-  int32_t y0, y1;
-};
-
 } // namespace {}
 
 void n3d_raster_depth_raster_sse(
@@ -29,31 +26,36 @@ void n3d_raster_depth_raster_sse(
     const n3d_rasterizer_t::triangle_t& t,
     void* user)
 {
-    // bin and triangle intersection
-    const aabb_t bound = {
-        max2<int32_t>(0,         t.min_.x - s.offset_.x),
-        min2<int32_t>(s.width_,  t.max_.x - s.offset_.x),
-        max2<int32_t>(0,         t.min_.y - s.offset_.y),
-        min2<int32_t>(s.height_, t.max_.y - s.offset_.y),
-    };
-    // xxx: quantize lower bound to sse alignment
+    // bin / triangle intersection boundary
+    const aabb_t bound = get_bound(s, t);
     const uint32_t offsetx = s.offset_.x + bound.x0;
     const uint32_t offsety = s.offset_.y + bound.y0;
-
     const uint32_t pitch   = s.pitch_;
 
+#if ATTRIB_ARRAY
     // barycentric interpolants
+          vec3f_t bc_vy = { t.v_ [e_attr_b0], t.v_ [e_attr_b1], t.v_ [e_attr_b2] };
+    const vec3f_t bc_sx = { t.sx_[e_attr_b0], t.sx_[e_attr_b1], t.sx_[e_attr_b2] };
+    const vec3f_t bc_sy = { t.sy_[e_attr_b0], t.sy_[e_attr_b1], t.sy_[e_attr_b2] };
+#else
           vec3f_t bc_vy = { t.b0_.v_,  t.b1_.v_,  t.b2_.v_  };
     const vec3f_t bc_sx = { t.b0_.sx_, t.b1_.sx_, t.b2_.sx_ };
     const vec3f_t bc_sy = { t.b0_.sy_, t.b1_.sy_, t.b2_.sy_ };
+#endif
     // shift to offset
     bc_vy += bc_sx * offsetx;
     bc_vy += bc_sy * offsety;
-
+    
+#if ATTRIB_ARRAY
     // 1/w interpolants
+          float w_vy = t.v_ [e_attr_w];
+    const float w_sx = t.sx_[e_attr_w];
+    const float w_sy = t.sy_[e_attr_w];
+#else
           float w_vy = t.w_.v_;
     const float w_sx = t.w_.sx_;
     const float w_sy = t.w_.sy_;
+#endif
     // shift to offset
     w_vy += w_sx * offsetx;
     w_vy += w_sy * offsety;

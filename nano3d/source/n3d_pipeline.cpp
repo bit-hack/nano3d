@@ -84,6 +84,7 @@ void n3d_transform(n3d_vertex_t* v, const uint32_t num_verts, const mat4f_t& m)
 // we can also reject triangles that are fully outside the frustum too.
 void n3d_clip(n3d_vertex_t v[4], uint32_t& num_verts)
 {
+#if 0
 
 #if 0
     //NOTE: this check here has some precision problems and doesnt 1:1 match
@@ -165,6 +166,7 @@ void n3d_clip(n3d_vertex_t v[4], uint32_t& num_verts)
         for (uint32_t i = 0; i < num_verts; ++i)
             v[i] = c[i];
     }
+#endif
 }
 
 // apply perspective divide

@@ -153,6 +153,7 @@ n3d_result_e nano3d_t::draw(
         return n3d_fail;
 
     for (uint32_t i = 0; i < num_indices; i += 3) {
+
         //(todo) Batch transform instead of serial.
         //      1. Transform all pending vertices we can.
         //      2. Clip all triangles.
@@ -165,9 +166,15 @@ n3d_result_e nano3d_t::draw(
         vec2f_t uv = vec2(0.f, 0.f);
         vec4f_t rgba = vec4(1.f, 1.f, 1.f, 1.f);
 
-        v[0] = { vec4(vb.pos_[i0]), vb.uv_ ? vb.uv_[i0] : uv, vb.rgba_ ? vb.rgba_[i0] : rgba };
-        v[1] = { vec4(vb.pos_[i1]), vb.uv_ ? vb.uv_[i1] : uv, vb.rgba_ ? vb.rgba_[i1] : rgba };
-        v[2] = { vec4(vb.pos_[i2]), vb.uv_ ? vb.uv_[i2] : uv, vb.rgba_ ? vb.rgba_[i2] : rgba };
+#if !ATTRIB_ARRAY
+        v[0] = n3d_vertex_t{ vec4(vb.pos_[i0]), vb.uv_ ? vb.uv_[i0] : uv, vb.rgba_ ? vb.rgba_[i0] : rgba };
+        v[1] = n3d_vertex_t{ vec4(vb.pos_[i1]), vb.uv_ ? vb.uv_[i1] : uv, vb.rgba_ ? vb.rgba_[i1] : rgba };
+        v[2] = n3d_vertex_t{ vec4(vb.pos_[i2]), vb.uv_ ? vb.uv_[i2] : uv, vb.rgba_ ? vb.rgba_[i2] : rgba };
+#else
+        v[0] = n3d_vertex_t{ vec4(vb.pos_[i0]) };
+        v[1] = n3d_vertex_t{ vec4(vb.pos_[i1]) };
+        v[2] = n3d_vertex_t{ vec4(vb.pos_[i2]) };
+#endif
 
         // we have 3 vertices to start with but due to near plane clipping
         // this could increase to 4 vertices.  the following functions are
