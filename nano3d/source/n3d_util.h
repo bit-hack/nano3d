@@ -45,22 +45,32 @@ bool power_of_two(uint32_t x) {
     return ((x - 1) & x) == 0;
 }
 
-inline constexpr float max2(const float a, const float b)
+template <typename type_t>
+inline constexpr type_t max2(const type_t a, const type_t b)
 {
     return (a > b) ? a : b;
 }
 
-inline constexpr float min2(const float a, const float b)
+template <typename type_t>
+inline constexpr type_t min2(const type_t a, const type_t b)
 {
     return (a < b) ? a : b;
 }
 
-inline constexpr float max3(const float a, const float b, const float c)
+template <typename type_t>
+inline constexpr type_t max3(const type_t a, const type_t b, const type_t c)
 {
     return max2(a, max2(b, c));
 }
 
-inline constexpr float min3(const float a, const float b, const float c)
+template <typename type_t>
+inline constexpr type_t min3(const type_t a, const type_t b, const type_t c)
 {
     return min2(a, min2(b, c));
+}
+
+template <typename type_t>
+inline constexpr type_t clamp(type_t lo, type_t in, type_t hi)
+{
+    return (in < lo) ? lo : ((in > hi) ? hi : in);
 }

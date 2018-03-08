@@ -118,7 +118,7 @@ struct n3d_rasterizer_t {
         uint32_t pitch_;
 
         // bin offset from screen origin [0,0]
-        vec2f_t offset_;
+        vec2i_t offset_;
     };
 
     // user data passed to the rasterizer
