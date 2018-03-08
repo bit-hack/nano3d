@@ -55,7 +55,7 @@ struct app_t {
 
         // bind a projection matrix
         mat4f_t proj;
-        n3d_frustum(proj, -c_aspect, c_aspect, -1.f, 1.f, 5.f, -128.f);
+        n3d_frustum(proj, -c_aspect, c_aspect, -1.f, 1.f, 5.f, 128.f);
         n3d_.bind(&proj, n3d_projection);
 
         return true;
