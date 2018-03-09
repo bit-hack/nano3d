@@ -10,15 +10,9 @@ struct n3d_vertex_buffer_t {
     // the number of vertices in this buffer
     uint32_t   num_;
     // raw vertex attribute arrays
-    vec3f_t  * pos_;
-
-#if 0 && ATTRIB_ARRAY
-    uint32_t num_attrs_;
-    float * attrib_;
-#else
-    vec2f_t  * uv_;
-    vec4f_t  * rgba_;
-#endif
+    const vec3f_t * pos_;
+    const vec2f_t * uv_;
+    const vec3f_t * rgb_;
 };
 
 // texture definition
@@ -30,7 +24,7 @@ struct n3d_texture_t {
     uint32_t   height_;
 
     // raw texel data as 32bits per pixel ARGB
-    uint32_t * texels_;
+    const uint32_t * texels_;
 };
 
 // render target definition

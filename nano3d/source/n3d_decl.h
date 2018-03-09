@@ -68,17 +68,19 @@ enum n3d_attribute_t {
     e_attr_w,
     // custom attributes beyond this point (rgb, uv, ...)
     e_attr_custom = 4,
+    // tex coordinates
+    e_attr_u = 4,
+    e_attr_v,
+    // colour
+    e_attr_r,
+    e_attr_g,
+    e_attr_b,
     // sentinel
     e_attr_count__ = 16
 };
 
 struct n3d_vertex_t {
     vec4f_t p_; // position
-#if !ATTRIB_ARRAY
-    vec2f_t t_; // texture
-    vec4f_t c_; // rgb
-#else
     static const size_t c_num_attrs = e_attr_count__ - e_attr_custom;
     std::array<float, c_num_attrs> attr_;
-#endif
 };

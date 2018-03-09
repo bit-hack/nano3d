@@ -30,7 +30,6 @@ bool n3d_prepare(
     // reciprocal of area for normalization
     const float rt_area = 1.f / t_area;
 
-#if ATTRIB_ARRAY
     // find normalized barycentric coordinates
     tri.v_ [e_attr_b0] = orient2d(vp1, vp2) * rt_area;
     tri.sx_[e_attr_b0] = (vp1.y - vp2.y)    * rt_area;
@@ -43,20 +42,6 @@ bool n3d_prepare(
     tri.v_ [e_attr_b2] = orient2d(vp0, vp1) * rt_area;
     tri.sx_[e_attr_b2] = (vp0.y - vp1.y)    * rt_area;
     tri.sy_[e_attr_b2] = (vp1.x - vp0.x)    * rt_area;
-#else
-    // find normalized barycentric coordinates
-    tri.b0_.v_  = orient2d(vp1, vp2) * rt_area;
-    tri.b0_.sx_ = (vp1.y - vp2.y) * rt_area;
-    tri.b0_.sy_ = (vp2.x - vp1.x) * rt_area;
-
-    tri.b1_.v_  = orient2d(vp2, vp0) * rt_area;
-    tri.b1_.sx_ = (vp2.y - vp0.y) * rt_area;
-    tri.b1_.sy_ = (vp0.x - vp2.x) * rt_area;
-
-    tri.b2_.v_  = orient2d(vp0, vp1) * rt_area;
-    tri.b2_.sx_ = (vp0.y - vp1.y) * rt_area;
-    tri.b2_.sy_ = (vp1.x - vp0.x) * rt_area;
-#endif
 
     // calculate 1 / w for vertices
     const float v0w = 1.f / v0.p_.w;
@@ -77,16 +62,10 @@ bool n3d_prepare(
                    (tri.B[2] * v2w))
 
 // barycentric interpolate 3 param
-#define BLERP3(B, V, P) ((tri.B[0] * v0.V.P * v0w) + \
-                         (tri.B[1] * v1.V.P * v1w) + \
-                         (tri.B[2] * v2.V.P * v2w))
-
-// barycentric interpolate 3 param
 #define BLERPA(B, A) ((tri.B[0] * v0.attr_[A] * v0w) + \
                       (tri.B[1] * v1.attr_[A] * v1w) + \
                       (tri.B[2] * v2.attr_[A] * v2w))
 
-#if ATTRIB_ARRAY
     // interplate 1 / w
     tri.v_ [e_attr_w] = BLERPW(v_);
     tri.sx_[e_attr_w] = BLERPW(sx_);
@@ -97,45 +76,8 @@ bool n3d_prepare(
       tri.sx_[e_attr_custom + i] = BLERPA(sx_, i);
       tri.sy_[e_attr_custom + i] = BLERPA(sy_, i);
     }
-#else
-    if (flags & e_prepare_depth /* always need 1/w */) {
-        // interplate 1 / w
-        tri.w_.v_  = BLERPW(v_);
-        tri.w_.sx_ = BLERPW(sx_);
-        tri.w_.sy_ = BLERPW(sy_);
-    }
-
-    // XXX: convert u,v,r,g,b into an array of generic interpolants
-
-    if (flags & e_prepare_rgb /* if raster.need_rgb */) {
-        // interpolate r / w
-        tri.r_.v_  = BLERP3(v_,  c_, x);
-        tri.r_.sx_ = BLERP3(sx_, c_, x);
-        tri.r_.sy_ = BLERP3(sy_, c_, x);
-        // interpolate g / w
-        tri.g_.v_  = BLERP3(v_,  c_, y);
-        tri.g_.sx_ = BLERP3(sx_, c_, y);
-        tri.g_.sy_ = BLERP3(sy_, c_, y);
-        // interpolate b / w
-        tri.b_.v_  = BLERP3(v_,  c_, z);
-        tri.b_.sx_ = BLERP3(sx_, c_, z);
-        tri.b_.sy_ = BLERP3(sy_, c_, z);
-    }
-
-    if (flags & e_prepare_uv /* if raster.need_uv */) {
-        // interpolate u / w
-        tri.u_.v_  = BLERP3(v_,  t_, x);
-        tri.u_.sx_ = BLERP3(sx_, t_, x);
-        tri.u_.sy_ = BLERP3(sy_, t_, x);
-        // interpolate v / w
-        tri.v_.v_  = BLERP3(v_,  t_, y);
-        tri.v_.sx_ = BLERP3(sx_, t_, y);
-        tri.v_.sy_ = BLERP3(sy_, t_, y);
-    }
-#endif
 
 #undef BLERPW
-#undef BLERP3
 #undef BLERPA
     return true;
 }

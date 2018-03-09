@@ -20,10 +20,10 @@ vec3f_t p[] = {
 };
 
 // vertex colour
-vec4f_t c[] = {
-    { 1.f, 0.f, 0.f, 1.f },
-    { 0.f, 1.f, 0.f, 1.f },
-    { 0.f, 0.f, 1.f, 1.f },
+vec3f_t c[] = {
+    { 1.f, 0.f, 0.f },
+    { 0.f, 1.f, 0.f },
+    { 0.f, 0.f, 1.f },
 };
 
 // index buffer

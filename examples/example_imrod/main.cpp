@@ -7,7 +7,7 @@
 
 // external model data
 extern const float obj_vertex[13890];
-extern const float obj_rgba[18520];
+extern const float obj_rgba[];
 extern const uint32_t obj_index[25170];
 extern const uint32_t obj_num_vertex;
 extern const uint32_t obj_num_index;
@@ -46,14 +46,14 @@ struct app_t {
         // bind the vertex buffer
         n3d_vertex_buffer_t vb = {
             obj_num_vertex / 3,
-            (vec3f_t*)obj_vertex,
+            (const vec3f_t*)obj_vertex,
             nullptr,
-            (vec4f_t*)obj_rgba
+            (const vec3f_t*)obj_rgba
         };
         n3d_.bind(&vb);
 
         // bind a rasterizer
-        rast_ = n3d_rasterizer_new(n3d_raster_rgb);
+        rast_ = n3d_rasterizer_new(n3d_raster_depth_sse);
         n3d_.bind(rast_);
 
         // bind a projection matrix

@@ -110,7 +110,7 @@ inline vec3_t<type_t> vec3(const vec4_t<type_t>& v)
 }
 
 template <typename type_t>
-inline vec4_t<type_t> vec4(vec3_t<type_t>& v)
+inline vec4_t<type_t> vec4(const vec3_t<type_t>& v)
 {
     return vec4_t<type_t>{ v.x, v.y, v.z, 1.f };
 }

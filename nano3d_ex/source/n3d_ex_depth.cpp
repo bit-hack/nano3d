@@ -33,31 +33,19 @@ void n3d_raster_depth_raster(
     const uint32_t width = s.width_;
     const uint32_t height = s.height_;
 
-#if ATTRIB_ARRAY
     // barycentric interpolants
           vec3f_t bc_vy = { t.v_ [e_attr_b0], t.v_ [e_attr_b1], t.v_ [e_attr_b2] };
     const vec3f_t bc_sx = { t.sx_[e_attr_b0], t.sx_[e_attr_b1], t.sx_[e_attr_b2] };
     const vec3f_t bc_sy = { t.sy_[e_attr_b0], t.sy_[e_attr_b1], t.sy_[e_attr_b2] };
-#else
-          vec3f_t bc_vy = { t.b0_.v_,  t.b1_.v_,  t.b2_.v_  };
-    const vec3f_t bc_sx = { t.b0_.sx_, t.b1_.sx_, t.b2_.sx_ };
-    const vec3f_t bc_sy = { t.b0_.sy_, t.b1_.sy_, t.b2_.sy_ };
-#endif
 
     // shift to offset
     bc_vy += bc_sx * s.offset_.x;
     bc_vy += bc_sy * s.offset_.y;
 
-#if ATTRIB_ARRAY
     // 1/w interpolants
           float w_vy = t.v_ [e_attr_w];
     const float w_sx = t.sx_[e_attr_w];
     const float w_sy = t.sy_[e_attr_w];
-#else
-          float w_vy = t.w_.v_;
-    const float w_sx = t.w_.sx_;
-    const float w_sy = t.w_.sy_;
-#endif
 
     // shift to offset
     w_vy += w_sx * s.offset_.x;

@@ -1,5 +1,3 @@
-// #include "libs/float4.h"
-
 #include "nano3d.h"
 #include "source/n3d_math.h"
 #include "source/n3d_util.h"
@@ -19,6 +17,75 @@ uint32_t rgb(float r, float g, float b, float a)
     return (r8 << 16) | (g8 << 8) | b8;
 }
 
+struct float4 {
+
+    float4() = delete;
+
+    float4(float v)
+        : e{ v, v, v, v }
+    {
+    }
+
+    float4(float vx, float vy, float vz, float vw)
+        : e{ vx, vy, vz, vw }
+    {
+    }
+
+    void operator*=(const float& s)
+    {
+        e[0] *= s;
+        e[1] *= s;
+        e[2] *= s;
+        e[3] *= s;
+    }
+
+    void operator+=(const float4& rhs)
+    {
+        e[0] += rhs.e[0];
+        e[1] += rhs.e[1];
+        e[2] += rhs.e[2];
+        e[3] += rhs.e[3];
+    }
+
+    void operator+=(const float& rhs)
+    {
+        e[0] += rhs;
+        e[1] += rhs;
+        e[2] += rhs;
+        e[3] += rhs;
+    }
+
+    float& operator[](uint32_t i)
+    {
+        return e[i];
+    }
+
+    float operator[](uint32_t i) const
+    {
+        return e[i];
+    }
+
+    std::array<float, 4> e;
+};
+
+float4 operator*(const float4& a, const float s)
+{
+    return float4{
+        a.e[0] * s,
+        a.e[1] * s,
+        a.e[2] * s,
+        a.e[3] * s };
+}
+
+float4 operator+(const float4& a, const float4& b)
+{
+    return float4{ 
+        a.e[0] + b.e[0],
+        a.e[1] + b.e[1],
+        a.e[2] + b.e[2],
+        a.e[3] + b.e[3] };
+}
+
 } // namespace {}
 
 void n3d_raster_depth_raster_sse(
@@ -27,85 +94,79 @@ void n3d_raster_depth_raster_sse(
     void* user)
 {
     // bin / triangle intersection boundary
-    const aabb_t bound = get_bound(s, t);
+    const aabb_t   bound   = get_bound(s, t);
     const uint32_t offsetx = s.offset_.x + bound.x0;
     const uint32_t offsety = s.offset_.y + bound.y0;
     const uint32_t pitch   = s.pitch_;
 
-#if ATTRIB_ARRAY
-    // barycentric interpolants
-          vec3f_t bc_vy = { t.v_ [e_attr_b0], t.v_ [e_attr_b1], t.v_ [e_attr_b2] };
-    const vec3f_t bc_sx = { t.sx_[e_attr_b0], t.sx_[e_attr_b1], t.sx_[e_attr_b2] };
-    const vec3f_t bc_sy = { t.sy_[e_attr_b0], t.sy_[e_attr_b1], t.sy_[e_attr_b2] };
-#else
-          vec3f_t bc_vy = { t.b0_.v_,  t.b1_.v_,  t.b2_.v_  };
-    const vec3f_t bc_sx = { t.b0_.sx_, t.b1_.sx_, t.b2_.sx_ };
-    const vec3f_t bc_sy = { t.b0_.sy_, t.b1_.sy_, t.b2_.sy_ };
-#endif
-    // shift to offset
-    bc_vy += bc_sx * offsetx;
-    bc_vy += bc_sy * offsety;
-    
-#if ATTRIB_ARRAY
-    // 1/w interpolants
-          float w_vy = t.v_ [e_attr_w];
-    const float w_sx = t.sx_[e_attr_w];
-    const float w_sy = t.sy_[e_attr_w];
-#else
-          float w_vy = t.w_.v_;
-    const float w_sx = t.w_.sx_;
-    const float w_sy = t.w_.sy_;
-#endif
-    // shift to offset
-    w_vy += w_sx * offsetx;
-    w_vy += w_sy * offsety;
+    static const uint32_t c_width = 4;
+    static const uint32_t c_attrs = 4;
+    std::array<float4, c_attrs> v_  = { t.v_ [0], t.v_ [1], t.v_ [2], t.v_ [3] };
+    std::array<float4, c_attrs> sx_ = { t.sx_[0], t.sx_[1], t.sx_[2], t.sx_[3] };
+    std::array<float,  c_attrs> sy_ = { t.sy_[0], t.sy_[1], t.sy_[2], t.sy_[3] };
+
+    for (uint32_t i = 0; i < c_attrs; ++i) {
+        // offset to correct coordinate
+        v_[i] += sx_[i] * offsetx + sy_[i] * offsety;
+        // offset by pixel ammount
+        for (uint32_t j = 0; j < c_width; ++j) {
+            v_[i][j] += sx_[i][j] * j;
+        }
+        // expand to 4x step
+        sx_[i] *= c_width;
+    }
 
     // frame buffer targets
     uint32_t* dst = s.target_[n3d_target_pixel].uint32_;
     float* depth = s.target_[n3d_target_depth].float_;
 
-    // pre step the buffers to x/y location
+    // pre step the buffers to y location
     dst   += pitch * bound.y0;
     depth += pitch * bound.y0;
+
+    // the pixel kernel
+    const auto kernel = [](uint32_t x, float w, uint32_t* dst, float* depth)
+    {
+        // depth test (w buffering)
+        if (w > depth[x]) {
+            // update colour buffer
+            const float c = w * 100.f;
+            dst[x] = rgb(c, c, c, c);
+            // update (w) depth buffer
+            depth[x] = w;
+        }
+    };
 
     // y axis
     for (int32_t y = bound.y0; y < bound.y1; ++y) {
 
         // fresh variables to step along this scanline
-        vec3f_t bc_vx = bc_vy;
-        float w_vx = w_vy;
+        std::array<float4, c_attrs> vx_ = v_;
 
         // x axis
-        // xxx: step over 4 pixels
-        for (int32_t x = bound.x0; x < bound.x1; ++x) {
+        for (int32_t x = bound.x0; x < bound.x1; x += c_width) {
 
             // check if inside triangle
-            if (bc_vx.x >= 0.f && bc_vx.y >= 0.f && bc_vx.z >= 0.f) {
-
-                // depth test (w buffering)
-                if (w_vx > depth[x]) {
-
-                    // update colour buffer
-                    const float c = w_vx * 100.f;
-                    dst[x] = rgb(c, c, c, c);
-
-                    // update (w) depth buffer
-                    depth[x] = w_vx;
+            for (uint32_t j = 0; j < c_width; ++j) {
+                if (vx_[0][j] >= 0.f && vx_[1][j] >= 0.f && vx_[2][j] >= 0.f) {
+                    kernel(x + j, vx_[3][j], dst, depth);
                 }
             }
 
             // step on x axis
-            bc_vx += bc_sx;
-            w_vx += w_sx;
+            for (uint32_t i = 0; i < c_attrs; ++i) {
+                vx_[i] += sx_[i];
+            }
 
         } // for (x axis)
 
         // step on y axis
-        bc_vy += bc_sy;
-        w_vy += w_sy;
+        for (uint32_t i = 0; i < c_attrs; ++i) {
+            v_[i] += sy_[i];
+        }
 
         // step the buffers
-        dst += pitch;
+        dst   += pitch;
         depth += pitch;
 
     } // for (y axis)

@@ -144,6 +144,8 @@ n3d_result_e nano3d_t::draw(
     nano3d_t::detail_t& d_ = *checked(detail_);
     n3d_vertex_buffer_t& vb = d_.vertex_buffer_;
 
+    const int prep_flags = e_prepare_depth | ((d_.state_.buffer_ && d_.state_.buffer_.get()->uv_) ? e_prepare_uv : 0) | ((d_.state_.buffer_ && d_.state_.buffer_.get()->rgb_) ? e_prepare_rgb : 0);
+
     // space for 4 vertices since one more may be generated when clipping.
     n3d_vertex_t v[4];
 
@@ -159,22 +161,30 @@ n3d_result_e nano3d_t::draw(
         //      2. Clip all triangles.
         //      3. Etc.
 
-        const uint32_t i0 = indices[i + 0];
-        const uint32_t i1 = indices[i + 2];
-        const uint32_t i2 = indices[i + 1];
-
-        vec2f_t uv = vec2(0.f, 0.f);
-        vec4f_t rgba = vec4(1.f, 1.f, 1.f, 1.f);
-
-#if !ATTRIB_ARRAY
-        v[0] = n3d_vertex_t{ vec4(vb.pos_[i0]), vb.uv_ ? vb.uv_[i0] : uv, vb.rgba_ ? vb.rgba_[i0] : rgba };
-        v[1] = n3d_vertex_t{ vec4(vb.pos_[i1]), vb.uv_ ? vb.uv_[i1] : uv, vb.rgba_ ? vb.rgba_[i1] : rgba };
-        v[2] = n3d_vertex_t{ vec4(vb.pos_[i2]), vb.uv_ ? vb.uv_[i2] : uv, vb.rgba_ ? vb.rgba_[i2] : rgba };
-#else
-        v[0] = n3d_vertex_t{ vec4(vb.pos_[i0]) };
-        v[1] = n3d_vertex_t{ vec4(vb.pos_[i1]) };
-        v[2] = n3d_vertex_t{ vec4(vb.pos_[i2]) };
-#endif
+        const std::array<uint32_t, 3> ix = {
+            indices[i + 0],
+            indices[i + 2],
+            indices[i + 1],
+        };
+        // upload position
+        for (uint32_t j = 0; j < 3; ++j) {
+            v[j].p_ = vec4(vb.pos_[ix[j]]);
+        }
+        // upload uv coordinates
+        if (prep_flags & e_prepare_uv) {
+            for (uint32_t j = 0; j < 3; ++j) {
+                v[j].attr_[0] = vb.uv_[ix[j]].x;
+                v[j].attr_[1] = vb.uv_[ix[j]].y;
+            }
+        }
+        // upload rgb values
+        if (prep_flags & e_prepare_rgb) {
+            for (uint32_t j = 0; j < 3; ++j) {
+                v[j].attr_[2] = vb.rgb_[ix[j]].x;
+                v[j].attr_[3] = vb.rgb_[ix[j]].y;
+                v[j].attr_[4] = vb.rgb_[ix[j]].z;
+            }
+        }
 
         // we have 3 vertices to start with but due to near plane clipping
         // this could increase to 4 vertices.  the following functions are
@@ -198,12 +208,11 @@ n3d_result_e nano3d_t::draw(
         n3d_w_divide(v, num);
 
         // transform from ndc to screen space
-        const vec2f_t sf = { 
+        const vec2f_t sf = {
             float(d_.target_.width_),
-            float(d_.target_.height_) };
+            float(d_.target_.height_)
+        };
         n3d_ndc_to_dc(v, num, sf);
-
-        const int prep_flags = e_prepare_depth | ((d_.state_.buffer_ && d_.state_.buffer_.get()->uv_) ? e_prepare_uv : 0) | ((d_.state_.buffer_ && d_.state_.buffer_.get()->rgba_) ? e_prepare_rgb : 0);
 
         // feed triangles to bins
         n3d_assert(num == 3 || num == 4);
