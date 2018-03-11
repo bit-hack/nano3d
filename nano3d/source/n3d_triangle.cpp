@@ -71,11 +71,13 @@ bool n3d_prepare(
     tri.sx_[e_attr_w] = BLERPW(sx_);
     tri.sy_[e_attr_w] = BLERPW(sy_);
 
+#if 0
     for (uint32_t i = 0; i < v0.attr_.size(); ++i) {
       tri.v_ [e_attr_custom + i] = BLERPA(v_,  i);
       tri.sx_[e_attr_custom + i] = BLERPA(sx_, i);
       tri.sy_[e_attr_custom + i] = BLERPA(sy_, i);
     }
+#endif
 
 #undef BLERPW
 #undef BLERPA

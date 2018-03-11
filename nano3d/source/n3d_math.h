@@ -136,6 +136,13 @@ inline vec4f_t operator*(
     return vec4f_t{ a.x * s, a.y * s, a.z * s, a.w * s };
 }
 
+inline vec4f_t operator+(
+    const vec4f_t& a,
+    const vec4f_t& b)
+{
+    return vec4f_t{ a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
+}
+
 inline void operator+=(
     vec2f_t& a,
     const vec2f_t& b)
@@ -188,6 +195,16 @@ inline void operator-=(
     a.y -= b.y;
     a.z -= b.z;
     a.w -= b.w;
+}
+
+inline void operator/=(
+    vec4f_t& a,
+    const vec4f_t& b)
+{
+    a.x = b.x;
+    a.y = b.y;
+    a.z = b.z;
+    a.w = b.w;
 }
 
 inline float n3d_lerp(

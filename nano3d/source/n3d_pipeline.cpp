@@ -182,12 +182,16 @@ void n3d_w_divide(n3d_vertex_t v[4], const uint32_t num_verts)
 }
 
 // normalized device coordinates to device coordinates
-void n3d_ndc_to_dc(n3d_vertex_t vert[4], const uint32_t num_verts, const vec2f_t sz)
+void n3d_ndc_to_dc(
+    n3d_vertex_t vert[4],
+    const uint32_t num_verts,
+    const vec2f_t sz)
 {
+    const float sx = sz.x * .5f;
+    const float sy = sz.y * .5f;
     for (uint32_t i = 0; i < num_verts; ++i) {
-
         vec4f_t& p = vert[i].p_;
-        p.x = (p.x + 1.f) * sz.x * .5f;
-        p.y = (p.y + 1.f) * sz.y * .5f;
+        p.x = (p.x + 1.f) * sx;
+        p.y = (p.y + 1.f) * sy;
     }
 }

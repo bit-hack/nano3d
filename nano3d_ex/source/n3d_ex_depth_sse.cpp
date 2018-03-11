@@ -1,10 +1,16 @@
+#include <intrin.h>
+
 #include "nano3d.h"
 #include "source/n3d_math.h"
 #include "source/n3d_util.h"
-
 #include "n3d_ex_common.h"
 
 namespace {
+template <typename in_t, typename out_t>
+inline out_t bitcast(const in_t x)
+{
+    return *reinterpret_cast<const out_t*>(&x);
+}
 
 uint32_t rgb(float r, float g, float b, float a)
 {
@@ -18,72 +24,94 @@ uint32_t rgb(float r, float g, float b, float a)
 }
 
 struct float4 {
+    __m128 m;
 
     float4() = delete;
 
-    float4(float v)
-        : e{ v, v, v, v }
+    explicit float4(__m128 v)
+        : m(v)
     {
     }
 
-    float4(float vx, float vy, float vz, float vw)
-        : e{ vx, vy, vz, vw }
+    float4(float v)
+        : m(_mm_set_ps1(v))
+    {
+    }
+
+    explicit float4(float x, float y, float z, float w)
+        : m(_mm_set_ps(w, z, y, x))
     {
     }
 
     void operator*=(const float& s)
     {
-        e[0] *= s;
-        e[1] *= s;
-        e[2] *= s;
-        e[3] *= s;
+        m = _mm_mul_ps(m, _mm_set_ps1(s));
     }
 
     void operator+=(const float4& rhs)
     {
-        e[0] += rhs.e[0];
-        e[1] += rhs.e[1];
-        e[2] += rhs.e[2];
-        e[3] += rhs.e[3];
+        m = _mm_add_ps(m, rhs.m);
     }
 
-    void operator+=(const float& rhs)
+    void operator+=(const float& rhs) 
     {
-        e[0] += rhs;
-        e[1] += rhs;
-        e[2] += rhs;
-        e[3] += rhs;
-    }
-
-    float& operator[](uint32_t i)
-    {
-        return e[i];
+        m = _mm_add_ps(m, _mm_set_ps1(rhs));
     }
 
     float operator[](uint32_t i) const
     {
-        return e[i];
+      switch (i) {
+      case 0: return bitcast<int, float>(_mm_extract_ps(m, 0));
+      case 1: return bitcast<int, float>(_mm_extract_ps(m, 1));
+      case 2: return bitcast<int, float>(_mm_extract_ps(m, 2));
+      case 3: return bitcast<int, float>(_mm_extract_ps(m, 3));
+      }
     }
 
-    std::array<float, 4> e;
+    float x() const
+    {
+        return bitcast<int32_t, float>(_mm_extract_ps(m, 0));
+    }
+
+    float y() const
+    {
+        return bitcast<int32_t, float>(_mm_extract_ps(m, 1));
+    }
+
+    float z() const
+    {
+        return bitcast<int32_t, float>(_mm_extract_ps(m, 2));
+    }
+
+    float w() const
+    {
+        return bitcast<int32_t, float>(_mm_extract_ps(m, 3));
+    }
 };
 
 float4 operator*(const float4& a, const float s)
 {
-    return float4{
-        a.e[0] * s,
-        a.e[1] * s,
-        a.e[2] * s,
-        a.e[3] * s };
+    return float4{_mm_mul_ps(a.m, _mm_set_ps1(s))};
+}
+
+float4 operator*(const float4& a, const float4& b)
+{
+    return float4{_mm_mul_ps(a.m, b.m)};
 }
 
 float4 operator+(const float4& a, const float4& b)
 {
-    return float4{ 
-        a.e[0] + b.e[0],
-        a.e[1] + b.e[1],
-        a.e[2] + b.e[2],
-        a.e[3] + b.e[3] };
+    return float4{_mm_add_ps(a.m, b.m)};
+}
+
+float4 operator&(const float4& a, const float4& b)
+{
+    return float4{_mm_and_ps(a.m, b.m)};
+}
+
+float4 operator|(const float4& a, const float4& b)
+{
+    return float4{_mm_or_ps(a.m, b.m)};
 }
 
 } // namespace {}
@@ -109,9 +137,7 @@ void n3d_raster_depth_raster_sse(
         // offset to correct coordinate
         v_[i] += sx_[i] * offsetx + sy_[i] * offsety;
         // offset by pixel ammount
-        for (uint32_t j = 0; j < c_width; ++j) {
-            v_[i][j] += sx_[i][j] * j;
-        }
+        v_[i] += sx_[i] * float4{0.f, 1.f, 2.f, 3.f};
         // expand to 4x step
         sx_[i] *= c_width;
     }
@@ -146,24 +172,27 @@ void n3d_raster_depth_raster_sse(
         // x axis
         for (int32_t x = bound.x0; x < bound.x1; x += c_width) {
 
+            const float4 b = vx_[0] | vx_[1] | vx_[2];
+
             // check if inside triangle
-            for (uint32_t j = 0; j < c_width; ++j) {
-                if (vx_[0][j] >= 0.f && vx_[1][j] >= 0.f && vx_[2][j] >= 0.f) {
-                    kernel(x + j, vx_[3][j], dst, depth);
-                }
-            }
+            if (b.x() >= 0.f) { kernel(x + 0, vx_[3].x(), dst, depth); }
+            if (b.y() >= 0.f) { kernel(x + 1, vx_[3].y(), dst, depth); }
+            if (b.z() >= 0.f) { kernel(x + 2, vx_[3].z(), dst, depth); }
+            if (b.w() >= 0.f) { kernel(x + 3, vx_[3].w(), dst, depth); }
 
             // step on x axis
-            for (uint32_t i = 0; i < c_attrs; ++i) {
-                vx_[i] += sx_[i];
-            }
+            vx_[0] += sx_[0];
+            vx_[1] += sx_[1];
+            vx_[2] += sx_[2];
+            vx_[3] += sx_[3];
 
         } // for (x axis)
 
         // step on y axis
-        for (uint32_t i = 0; i < c_attrs; ++i) {
-            v_[i] += sy_[i];
-        }
+        v_[0] += sy_[0];
+        v_[1] += sy_[1];
+        v_[2] += sy_[2];
+        v_[3] += sy_[3];
 
         // step the buffers
         dst   += pitch;
